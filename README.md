@@ -34,12 +34,12 @@ Now let's use the model:
 
     $ find tools/text-classifier -name \*.cc -or -name \*.h |
       xargs text-classifier classify model |
-      sort -k2 -g
-    tools/text-classifier/html-tokenizer.cc  0.0106704822
-    tools/text-classifier/23andme.cc         0.0110902358
-    tools/text-classifier/text-classifier.cc 0.0284913629
-    tools/text-classifier/html-tokenizer.h   0.0651432425
-    tools/text-classifier/23andme.h          0.0669780597
+      sort -k2 -g | column -t
+    tools/text-classifier/html-tokenizer.cc   0.0106704822
+    tools/text-classifier/23andme.cc          0.0110902358
+    tools/text-classifier/text-classifier.cc  0.0284913629
+    tools/text-classifier/html-tokenizer.h    0.0651432425
+    tools/text-classifier/23andme.h           0.0669780597
 
 # Reading Material
 
