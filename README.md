@@ -41,3 +41,8 @@ Now let's use the model:
     tools/text-classifier/html-tokenizer.h   0.0651432425
     tools/text-classifier/23andme.h          0.0669780597
 
+# Reading Material
+
+* [BNS Feature Scaling: An Improved Representation over TF-IDF for SVM Text Classification](http://www.hpl.hp.com/techreports/2007/HPL-2007-32R1.pdf)
+
+* [A Dual Coordinate Descent Method for Large-scale Linear SVM](https://www.csie.ntu.edu.tw/~cjlin/papers/cddual.pdf)
