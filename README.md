@@ -22,7 +22,7 @@ this program.  If not, see <http://www.gnu.org/licenses/>.
 
 # Example Usage
 
-Let's teach a model to distinguish between `.h` and `.c` files:
+Let's teach a model to distinguish between `.h` and `.cc` files:
 
     $ find base/ -name \*.cc |
       xargs text-classifier --strategy=plain learn training-data 0
