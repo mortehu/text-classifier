@@ -58,9 +58,6 @@
 /* Define to the version of this package. */
 #undef PACKAGE_VERSION
 
-/* Define to the version of this package. */
-#undef PROJECT_VERSION_FULL
-
 /* Define to 1 if you have the ANSI C header files. */
 #undef STDC_HEADERS
 
@@ -88,10 +85,6 @@
 
 /* Version number of package */
 #undef VERSION
-
-/* Define to 1 if `lex' declares `yytext' as a `char *' by default, not a
-   `char[]'. */
-#undef YYTEXT_POINTER
 
 /* Define to 1 if on MINIX. */
 #undef _MINIX

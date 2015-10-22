@@ -41,6 +41,12 @@ Now let's use the model:
     tools/text-classifier/html-tokenizer.h    0.0651432425
     tools/text-classifier/23andme.h           0.0669780597
 
+# Dependencies
+
+This program depends on `libkj` from [Cap'n
+Proto](https://github.com/sandstorm-io/capnproto) and
+[libsnappy](https://google.github.io/snappy/).
+
 # Reading Material
 
 * [BNS Feature Scaling: An Improved Representation over TF-IDF for SVM Text Classification](http://www.hpl.hp.com/techreports/2007/HPL-2007-32R1.pdf)

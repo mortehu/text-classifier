@@ -3,18 +3,18 @@ AM_INIT_AUTOMAKE([foreign nostdinc subdir-objects])
 
 AC_CONFIG_MACRO_DIR([m4])
 
+AM_MAINTAINER_MODE([enable])
+
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 
 AC_CANONICAL_HOST
 
 AC_GNU_SOURCE
 
-# For libdivsufsort
-AC_DEFINE(PROJECT_VERSION_FULL, [PACKAGE_VERSION], [Define to the version of this package.])
+PKG_CHECK_MODULES([CAPNP], [capnp])
 
 AM_PROG_AR
 AM_PROG_CC_C_O
-AM_PROG_LEX
 AC_PROG_CXX
 AC_PROG_INSTALL
 AC_PROG_MAKE_SET

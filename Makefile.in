@@ -147,7 +147,8 @@ am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(libdir)" \
 	"$(DESTDIR)$(man1dir)" "$(DESTDIR)$(pkgdatadir)"
 LTLIBRARIES = $(lib_LTLIBRARIES) $(nobase_lib_LTLIBRARIES) \
 	$(noinst_LTLIBRARIES)
-base_libbase_la_DEPENDENCIES =
+am__DEPENDENCIES_1 =
+base_libbase_la_DEPENDENCIES = $(am__DEPENDENCIES_1)
 am__dirstamp = $(am__leading_dot)dirstamp
 am_base_libbase_la_OBJECTS = base/columnfile.lo base/error.lo \
 	base/file.lo base/hash.lo base/random.lo base/string.lo
@@ -444,6 +445,8 @@ AUTOCONF = @AUTOCONF@
 AUTOHEADER = @AUTOHEADER@
 AUTOMAKE = @AUTOMAKE@
 AWK = @AWK@
+CAPNP_CFLAGS = @CAPNP_CFLAGS@
+CAPNP_LIBS = @CAPNP_LIBS@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CFLAGS = @CFLAGS@
@@ -473,15 +476,13 @@ INSTALL_SCRIPT = @INSTALL_SCRIPT@
 INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
 LD = @LD@
 LDFLAGS = @LDFLAGS@
-LEX = @LEX@
-LEXLIB = @LEXLIB@
-LEX_OUTPUT_ROOT = @LEX_OUTPUT_ROOT@
 LIBOBJS = @LIBOBJS@
 LIBS = @LIBS@
 LIBTOOL = @LIBTOOL@
 LIPO = @LIPO@
 LN_S = @LN_S@
 LTLIBOBJS = @LTLIBOBJS@
+MAINT = @MAINT@
 MAKEINFO = @MAKEINFO@
 MANIFEST_TOOL = @MANIFEST_TOOL@
 MKDIR_P = @MKDIR_P@
@@ -499,6 +500,9 @@ PACKAGE_TARNAME = @PACKAGE_TARNAME@
 PACKAGE_URL = @PACKAGE_URL@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
+PKG_CONFIG = @PKG_CONFIG@
+PKG_CONFIG_LIBDIR = @PKG_CONFIG_LIBDIR@
+PKG_CONFIG_PATH = @PKG_CONFIG_PATH@
 RANLIB = @RANLIB@
 SED = @SED@
 SET_MAKE = @SET_MAKE@
@@ -567,7 +571,7 @@ nobase_lib_LTLIBRARIES =
 noinst_LIBRARIES = 
 noinst_LTLIBRARIES = base/libbase.la index/libtagsoup.la
 noinst_SCRIPTS = 
-AM_CPPFLAGS = -I$(srcdir) -I.
+AM_CPPFLAGS = -I$(srcdir) -I. $(CAPNP_CFLAGS)
 AM_CFLAGS = -g -Wall -march=native
 AM_CXXFLAGS = -g -Wall -march=native
 AM_LDFLAGS = -lpthread
@@ -580,7 +584,7 @@ base_libbase_la_SOURCES = \
   base/random.cc \
   base/string.cc
 
-base_libbase_la_LIBADD = -lkj -lsnappy
+base_libbase_la_LIBADD = $(CAPNP_LIBS) -lsnappy
 index_libtagsoup_la_SOURCES = \
   index/web/tagsoup.cc
 
@@ -600,7 +604,7 @@ all: config.h
 .SUFFIXES: .cc .lo .log .o .obj .test .test$(EXEEXT) .trs
 am--refresh: Makefile
 	@:
-$(srcdir)/Makefile.in:  $(srcdir)/Makefile.am $(srcdir)/base/Makefile.am $(srcdir)/index/Makefile.am $(srcdir)/tools/text-classifier/Makefile.am $(am__configure_deps)
+$(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am $(srcdir)/base/Makefile.am $(srcdir)/index/Makefile.am $(srcdir)/tools/text-classifier/Makefile.am $(am__configure_deps)
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
 	    *$$dep*) \
@@ -627,9 +631,9 @@ $(srcdir)/base/Makefile.am $(srcdir)/index/Makefile.am $(srcdir)/tools/text-clas
 $(top_builddir)/config.status: $(top_srcdir)/configure $(CONFIG_STATUS_DEPENDENCIES)
 	$(SHELL) ./config.status --recheck
 
-$(top_srcdir)/configure:  $(am__configure_deps)
+$(top_srcdir)/configure: @MAINTAINER_MODE_TRUE@ $(am__configure_deps)
 	$(am__cd) $(srcdir) && $(AUTOCONF)
-$(ACLOCAL_M4):  $(am__aclocal_m4_deps)
+$(ACLOCAL_M4): @MAINTAINER_MODE_TRUE@ $(am__aclocal_m4_deps)
 	$(am__cd) $(srcdir) && $(ACLOCAL) $(ACLOCAL_AMFLAGS)
 $(am__aclocal_m4_deps):
 
@@ -640,7 +644,7 @@ config.h: stamp-h1
 stamp-h1: $(srcdir)/config.h.in $(top_builddir)/config.status
 	@rm -f stamp-h1
 	cd $(top_builddir) && $(SHELL) ./config.status config.h
-$(srcdir)/config.h.in:  $(am__configure_deps) 
+$(srcdir)/config.h.in: @MAINTAINER_MODE_TRUE@ $(am__configure_deps) 
 	($(am__cd) $(top_srcdir) && $(AUTOHEADER))
 	rm -f stamp-h1
 	touch $@

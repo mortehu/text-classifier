@@ -8,4 +8,4 @@ base_libbase_la_SOURCES = \
   base/hash.cc \
   base/random.cc \
   base/string.cc
-base_libbase_la_LIBADD = -lkj -lsnappy
+base_libbase_la_LIBADD = $(CAPNP_LIBS) -lsnappy

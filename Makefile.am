@@ -13,7 +13,7 @@ noinst_SCRIPTS =
 
 TESTS = $(check_PROGRAMS)
 
-AM_CPPFLAGS = -I$(srcdir) -I.
+AM_CPPFLAGS = -I$(srcdir) -I. $(CAPNP_CFLAGS)
 AM_CFLAGS = -g -Wall -march=native
 AM_CXXFLAGS = -g -Wall -march=native
 AM_LDFLAGS = -lpthread
