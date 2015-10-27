@@ -10,7 +10,6 @@
 
 #include <sys/uio.h>
 
-#include <capnp/blob.h>
 #include <kj/array.h>
 #include <kj/string.h>
 
@@ -49,9 +48,6 @@ class StringRef {
 
   StringRef(const kj::StringPtr& kjstr)
       : data_(kjstr.cStr()), size_(kjstr.size()) {}
-
-  StringRef(capnp::Data::Reader v)
-      : data_(reinterpret_cast<const char*>(v.begin())), size_(v.size()) {}
 
   StringRef(std::nullptr_t) : data_(nullptr), size_(0) {}
 
