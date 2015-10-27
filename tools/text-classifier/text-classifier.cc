@@ -3,6 +3,7 @@
 #endif
 
 #include <cctype>
+#include <cinttypes>
 #include <cstdio>
 #include <map>
 #include <unordered_map>
