@@ -41,11 +41,11 @@ Now let's use the model:
     tools/text-classifier/html-tokenizer.h    0.0651432425
     tools/text-classifier/23andme.h           0.0669780597
 
-# Dependencies
+# External Dependencies
 
-This program depends on `libkj` from [Cap'n
-Proto](https://github.com/sandstorm-io/capnproto) and
-[libsnappy](https://google.github.io/snappy/).
+  * `libkj` from [Cap'n Proto](https://github.com/sandstorm-io/capnproto),
+  * [libsnappy](https://google.github.io/snappy/), and
+  * [libsparsehash](https://github.com/sparsehash/sparsehash).
 
 # Reading Material
 
