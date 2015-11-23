@@ -43,7 +43,7 @@ class StringRef {
       : data_(reinterpret_cast<const char*>(iov.iov_base)),
         size_(iov.iov_len) {}
 
-  StringRef(const kj::Array<char>& buffer)
+  StringRef(const kj::Array<const char>& buffer)
       : data_(buffer.begin()), size_(buffer.size()) {}
 
   StringRef(const kj::StringPtr& kjstr)

@@ -1785,7 +1785,7 @@ int main(int argc, char** argv) try {
     bool done = false;
 
     while (!done) {
-      kj::Array<char> buffer;
+      kj::Array<const char> buffer;
 
       const char* name = "<stdin>";
 

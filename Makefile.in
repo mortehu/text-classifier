@@ -150,8 +150,9 @@ LTLIBRARIES = $(lib_LTLIBRARIES) $(nobase_lib_LTLIBRARIES) \
 am__DEPENDENCIES_1 =
 base_libbase_la_DEPENDENCIES = $(am__DEPENDENCIES_1)
 am__dirstamp = $(am__leading_dot)dirstamp
-am_base_libbase_la_OBJECTS = base/columnfile.lo base/error.lo \
-	base/file.lo base/hash.lo base/random.lo base/string.lo
+am_base_libbase_la_OBJECTS = base/columnfile-reader.lo \
+	base/columnfile-writer.lo base/error.lo base/file.lo \
+	base/hash.lo base/random.lo base/string.lo
 base_libbase_la_OBJECTS = $(am_base_libbase_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
@@ -554,6 +555,7 @@ pdfdir = @pdfdir@
 prefix = @prefix@
 program_transform_name = @program_transform_name@
 psdir = @psdir@
+runstatedir = @runstatedir@
 sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 srcdir = @srcdir@
@@ -577,7 +579,8 @@ AM_CXXFLAGS = -g -Wall -march=native
 AM_LDFLAGS = -lpthread
 ACLOCAL_AMFLAGS = -I m4
 base_libbase_la_SOURCES = \
-  base/columnfile.cc \
+  base/columnfile-reader.cc \
+  base/columnfile-writer.cc \
   base/error.cc \
   base/file.cc \
   base/hash.cc \
@@ -749,7 +752,9 @@ base/$(am__dirstamp):
 base/$(DEPDIR)/$(am__dirstamp):
 	@$(MKDIR_P) base/$(DEPDIR)
 	@: > base/$(DEPDIR)/$(am__dirstamp)
-base/columnfile.lo: base/$(am__dirstamp) \
+base/columnfile-reader.lo: base/$(am__dirstamp) \
+	base/$(DEPDIR)/$(am__dirstamp)
+base/columnfile-writer.lo: base/$(am__dirstamp) \
 	base/$(DEPDIR)/$(am__dirstamp)
 base/error.lo: base/$(am__dirstamp) base/$(DEPDIR)/$(am__dirstamp)
 base/file.lo: base/$(am__dirstamp) base/$(DEPDIR)/$(am__dirstamp)
@@ -906,7 +911,8 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@base/$(DEPDIR)/columnfile.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@base/$(DEPDIR)/columnfile-reader.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@base/$(DEPDIR)/columnfile-writer.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@base/$(DEPDIR)/error.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@base/$(DEPDIR)/file.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@base/$(DEPDIR)/hash.Plo@am__quote@

@@ -17,11 +17,22 @@ enum ColumnFileCompression : uint32_t {
   kColumnFileCompressionSnappy = 1,
 };
 
+class ColumnFileOutput {
+ public:
+  virtual ~ColumnFileOutput() noexcept(false) {}
+
+  virtual void Flush(
+      const std::vector<std::pair<uint32_t, ev::StringRef>>& fields,
+      ColumnFileCompression& compression) = 0;
+
+  // Finishes writing the file.  Returns the underlying file descriptor, if
+  // available.
+  virtual kj::AutoCloseFd Finalize() = 0;
+};
+
 class ColumnFileWriter {
  public:
-  // Encodes an unsigned integer into a variable length integer.  Exposed here
-  // for unit testing.
-  static void PutInt(std::string& output, uint32_t value);
+  ColumnFileWriter(std::unique_ptr<ColumnFileOutput> output);
 
   ColumnFileWriter(kj::AutoCloseFd&& fd);
 
@@ -34,19 +45,15 @@ class ColumnFileWriter {
   void SetCompression(ColumnFileCompression c) { compression_ = c; }
 
   // Inserts a value.
-  //
-  // The `level' indicates at which level in the schema hierarchy a new record
-  // is inserted.
-  void Put(uint8_t level, uint32_t column, const StringRef& data);
-  void PutNull(uint8_t level, uint32_t column);
+  void Put(uint32_t column, const StringRef& data);
+  void PutNull(uint32_t column);
 
   void PutRow(const std::vector<std::pair<uint32_t, StringRef>>& row);
 
   // Writes all buffered records to the output stream.
   void Flush();
 
-  // Finishes writing the file.  Returns the file descriptor in case the caller
-  // wants it.
+  // Finishes writing the file.  Returns the underlying file descriptor.
   //
   // This function is implicitly called by the destructor.
   kj::AutoCloseFd Finalize();
@@ -54,9 +61,9 @@ class ColumnFileWriter {
  private:
   class FieldWriter {
    public:
-    void Put(uint8_t level, const StringRef& data);
+    void Put(const StringRef& data);
 
-    void PutNull(uint8_t level);
+    void PutNull();
 
     void Flush();
 
@@ -69,29 +76,45 @@ class ColumnFileWriter {
 
     std::string value_;
     bool value_is_null_ = false;
-    uint8_t level_ = 0;
 
     uint32_t repeat_ = 0;
 
     unsigned int shared_prefix_ = 0;
   };
 
-  kj::AutoCloseFd fd_;
-  std::string* output_string_ = nullptr;
+  std::unique_ptr<ColumnFileOutput> output_;
 
   ColumnFileCompression compression_ = kColumnFileCompressionSnappy;
 
   std::map<uint32_t, FieldWriter> fields_;
 };
 
+class ColumnFileInput {
+ public:
+  virtual ~ColumnFileInput() noexcept(false) {}
+
+  // Returns the next data chunks for all fields.  If `field_filter` is not
+  // empty, only fields specified in this set are included.
+  //
+  // Returns an empty vector if the end was reached.
+  virtual std::vector<std::pair<uint32_t, kj::Array<const char>>> Fill(
+      const std::unordered_set<uint32_t>& field_filter,
+      ColumnFileCompression& compression) = 0;
+
+  // Returns `true` if the next call to `Fill` will definitely return an
+  // empty vector, `false` otherwise.
+  virtual bool End() const = 0;
+
+  virtual void SeekToStart() = 0;
+};
+
 class ColumnFileReader {
  public:
-  // Decodes an integer encoded with ColumnFileWriter::PutInt().
-  static uint32_t GetInt(StringRef& input);
+  ColumnFileReader(std::unique_ptr<ColumnFileInput> input);
 
   // Reads a column file as a stream.  If you want to use memory-mapped I/O,
   // use the StringRef based constructor below.
-  ColumnFileReader(kj::AutoCloseFd&& fd);
+  ColumnFileReader(kj::AutoCloseFd fd);
 
   // Reads a column file from memory, or virtual address space.
   ColumnFileReader(StringRef input);
@@ -113,6 +136,9 @@ class ColumnFileReader {
   // Returns true iff there's no more data to be read.
   bool End();
 
+  const StringRef* Peek(uint32_t field);
+  const StringRef* Get(uint32_t field);
+
   const std::vector<std::pair<uint32_t, StringRef>>& GetRow();
 
   void SeekToStart();
@@ -120,36 +146,30 @@ class ColumnFileReader {
  private:
   class FieldReader {
    public:
-    FieldReader(std::unique_ptr<char[]> buffer, size_t buffer_size,
-                ColumnFileCompression compression);
-
-    FieldReader(StringRef data, ColumnFileCompression compression);
+    FieldReader(kj::Array<const char> buffer, ColumnFileCompression compression);
 
     bool End() const { return !repeat_ && data_.empty(); }
 
-    uint8_t NextLevel() {
+    const StringRef* Peek() {
       if (!repeat_) {
         KJ_ASSERT(!data_.empty());
         Fill();
+        KJ_ASSERT(repeat_ > 0);
       }
-      return level_;
+
+      return value_is_null_ ? nullptr : &value_;
     }
 
     const StringRef* Get() {
-      if (!repeat_) {
-        KJ_ASSERT(!data_.empty());
-        Fill();
-      }
+      auto result = Peek();
       --repeat_;
-
-      return value_is_null_ ? nullptr : &value_;
+      return result;
     }
 
    private:
     void Fill();
 
-    std::unique_ptr<char[]> buffer_;
-    size_t buffer_size_ = 0;
+    kj::Array<const char> buffer_;
 
     StringRef data_;
 
@@ -157,22 +177,18 @@ class ColumnFileReader {
 
     StringRef value_;
     bool value_is_null_ = true;
-    uint8_t level_;
+    uint32_t array_size_ = 0;
 
     uint32_t repeat_ = 0;
   };
 
   void Fill();
 
+  std::unique_ptr<ColumnFileInput> input_;
+
   std::unordered_set<uint32_t> column_filter_;
 
-  std::string buffer_;
-
-  StringRef data_;
-
-  std::vector<std::pair<uint32_t, FieldReader>> fields_;
-
-  kj::AutoCloseFd fd_;
+  std::map<uint32_t, FieldReader> fields_;
 
   std::vector<std::pair<uint32_t, StringRef>> row_buffer_;
 };

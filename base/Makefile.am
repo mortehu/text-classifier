@@ -2,7 +2,8 @@ noinst_LTLIBRARIES += \
   base/libbase.la
 
 base_libbase_la_SOURCES = \
-  base/columnfile.cc \
+  base/columnfile-reader.cc \
+  base/columnfile-writer.cc \
   base/error.cc \
   base/file.cc \
   base/hash.cc \
