@@ -22,12 +22,8 @@ AC_PROG_MAKE_SET
 LT_INIT
 
 AC_LANG_PUSH([C++])
-AC_CHECK_HEADER([snappy.h], [], [
-    AC_MSG_ERROR([required header file not found])
-])
-AC_CHECK_LIB([snappy], [snappy_compress], [], [
-    AC_MSG_ERROR([required library not found])
-])
+AC_CHECK_HEADER(
+  [snappy.h], [AC_CHECK_LIB([snappy], [snappy_compress], [], [])], [])
 
 AX_OPENMP()
 AX_CXX_COMPILE_STDCXX_14([ext])
@@ -39,6 +35,8 @@ AC_LANG_POP([C])
 
 CFLAGS="$CFLAGS -fuse-ld=gold $OPENMP_CFLAGS"
 CXXFLAGS="$CXXFLAGS -fuse-ld=gold $OPENMP_CXXFLAGS"
+
+AM_CONDITIONAL(HAVE_LIBSNAPPY, [test $HAVE_LIBSNAPPY = 1])
 
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_FILES([Makefile])

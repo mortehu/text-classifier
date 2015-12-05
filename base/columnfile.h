@@ -1,6 +1,10 @@
 #ifndef BASE_COLUMNFILE_H_
 #define BASE_COLUMNFILE_H_ 1
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <cstdint>
 #include <map>
 #include <unordered_set>
@@ -84,7 +88,11 @@ class ColumnFileWriter {
 
   std::unique_ptr<ColumnFileOutput> output_;
 
+#if HAVE_LIBSNAPPY
   ColumnFileCompression compression_ = kColumnFileCompressionSnappy;
+#else
+  ColumnFileCompression compression_ = kColumnFileCompressionNone;
+#endif
 
   std::map<uint32_t, FieldWriter> fields_;
 };

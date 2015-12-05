@@ -9,4 +9,8 @@ base_libbase_la_SOURCES = \
   base/hash.cc \
   base/random.cc \
   base/string.cc
-base_libbase_la_LIBADD = $(CAPNP_LIBS) -lsnappy
+base_libbase_la_LIBADD = $(CAPNP_LIBS)
+
+if HAVE_LIBSNAPPY
+base_libbase_la_LIBADD += -lsnappy
+endif

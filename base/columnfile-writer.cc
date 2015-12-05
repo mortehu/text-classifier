@@ -1,3 +1,7 @@
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include "base/columnfile.h"
 
 #include <fcntl.h>
@@ -5,7 +9,10 @@
 
 #include <kj/array.h>
 #include <kj/debug.h>
+
+#if HAVE_LIBSNAPPY
 #include <snappy.h>
+#endif
 
 #include "base/columnfile-internal.h"
 #include "base/file.h"
@@ -260,16 +267,26 @@ void ColumnFileWriter::FieldWriter::Finalize(
     ColumnFileCompression compression) {
   Flush();
 
-  if (compression == kColumnFileCompressionSnappy) {
-    std::string compressed_data;
-    compressed_data.resize(snappy::MaxCompressedLength(data_.size()));
-    size_t compressed_length = SIZE_MAX;
-    snappy::RawCompress(data_.data(), data_.size(), &compressed_data[0],
-                        &compressed_length);
-    KJ_REQUIRE(compressed_length <= compressed_data.size());
-    compressed_data.resize(compressed_length);
-    data_.swap(compressed_data);
-    KJ_REQUIRE(snappy::IsValidCompressedBuffer(data_.data(), data_.size()));
+  switch (compression) {
+    case kColumnFileCompressionNone:
+      break;
+
+#if HAVE_LIBSNAPPY
+    case kColumnFileCompressionSnappy: {
+      std::string compressed_data;
+      compressed_data.resize(snappy::MaxCompressedLength(data_.size()));
+      size_t compressed_length = SIZE_MAX;
+      snappy::RawCompress(data_.data(), data_.size(), &compressed_data[0],
+                          &compressed_length);
+      KJ_REQUIRE(compressed_length <= compressed_data.size());
+      compressed_data.resize(compressed_length);
+      data_.swap(compressed_data);
+      KJ_REQUIRE(snappy::IsValidCompressedBuffer(data_.data(), data_.size()));
+    } break;
+#endif
+
+    default:
+      KJ_FAIL_REQUIRE("Unsupported compression scheme", compression);
   }
 }
 

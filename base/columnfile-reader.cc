@@ -1,3 +1,7 @@
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include "base/columnfile.h"
 
 #include <fcntl.h>
@@ -5,7 +9,10 @@
 
 #include <kj/array.h>
 #include <kj/debug.h>
+
+#if HAVE_LIBSNAPPY
 #include <snappy.h>
+#endif
 
 #include "base/columnfile-internal.h"
 #include "base/file.h"
@@ -315,20 +322,29 @@ ColumnFileReader::FieldReader::FieldReader(kj::Array<const char> buffer,
     : buffer_(std::move(buffer)), data_(buffer_), compression_(compression) {}
 
 void ColumnFileReader::FieldReader::Fill() {
-  if (compression_ != kColumnFileCompressionNone) {
-    KJ_REQUIRE(compression_ == kColumnFileCompressionSnappy);
-    KJ_REQUIRE(snappy::IsValidCompressedBuffer(data_.data(), data_.size()));
-    size_t decompressed_size = 0;
-    KJ_REQUIRE(snappy::GetUncompressedLength(data_.data(), data_.size(),
-                                             &decompressed_size));
+  switch (compression_) {
+    case kColumnFileCompressionNone:
+      break;
 
-    auto decompressed_data = kj::heapArray<char>(decompressed_size);
-    KJ_REQUIRE(snappy::RawUncompress(data_.data(), data_.size(),
-                                     decompressed_data.begin()));
+#if HAVE_LIBSNAPPY
+    case kColumnFileCompressionSnappy: {
+      KJ_REQUIRE(snappy::IsValidCompressedBuffer(data_.data(), data_.size()));
+      size_t decompressed_size = 0;
+      KJ_REQUIRE(snappy::GetUncompressedLength(data_.data(), data_.size(),
+                                               &decompressed_size));
+
+      auto decompressed_data = kj::heapArray<char>(decompressed_size);
+      KJ_REQUIRE(snappy::RawUncompress(data_.data(), data_.size(),
+                                       decompressed_data.begin()));
     buffer_ = std::move(decompressed_data);
 
     data_ = buffer_;
     compression_ = kColumnFileCompressionNone;
+    } break;
+#endif
+
+    default:
+      KJ_FAIL_REQUIRE("Unsupported compression scheme", compression_);
   }
 
   if (!repeat_) {

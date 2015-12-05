@@ -96,6 +96,7 @@ bin_PROGRAMS = tools/text-classifier/text-classifier$(EXEEXT)
 check_PROGRAMS =
 noinst_PROGRAMS =
 TESTS = $(am__EXEEXT_1)
+@HAVE_LIBSNAPPY_TRUE@am__append_1 = -lsnappy
 subdir = .
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/ax_cxx_compile_stdcxx_14.m4 \
@@ -148,7 +149,8 @@ am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(libdir)" \
 LTLIBRARIES = $(lib_LTLIBRARIES) $(nobase_lib_LTLIBRARIES) \
 	$(noinst_LTLIBRARIES)
 am__DEPENDENCIES_1 =
-base_libbase_la_DEPENDENCIES = $(am__DEPENDENCIES_1)
+base_libbase_la_DEPENDENCIES = $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_1)
 am__dirstamp = $(am__leading_dot)dirstamp
 am_base_libbase_la_OBJECTS = base/columnfile-reader.lo \
 	base/columnfile-writer.lo base/error.lo base/file.lo \
@@ -587,7 +589,7 @@ base_libbase_la_SOURCES = \
   base/random.cc \
   base/string.cc
 
-base_libbase_la_LIBADD = $(CAPNP_LIBS) -lsnappy
+base_libbase_la_LIBADD = $(CAPNP_LIBS) $(am__append_1)
 index_libtagsoup_la_SOURCES = \
   index/web/tagsoup.cc
 

@@ -44,7 +44,7 @@ Now let's use the model:
 # External Dependencies
 
   * `libkj` from [Cap'n Proto](https://github.com/sandstorm-io/capnproto),
-  * [libsnappy](https://google.github.io/snappy/), and
+  * [libsnappy](https://google.github.io/snappy/) (optional), and
   * [libsparsehash](https://github.com/sparsehash/sparsehash).
 
 # Reading Material
