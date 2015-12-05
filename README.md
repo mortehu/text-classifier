@@ -28,18 +28,19 @@ Let's teach a model to distinguish between `.h` and `.cc` files:
       xargs text-classifier --strategy=plain learn training-data 0
     $ find base/ -name \*.h |
       xargs text-classifier --strategy=plain learn training-data 1
-    $ text-classifier --weight=bns analyze training-data model
+    $ text-classifier --cost-function=f1 --weight=bns --no-normalize \
+      analyze training-data model
 
 Now let's use the model:
 
     $ find tools/text-classifier -name \*.cc -or -name \*.h |
       xargs text-classifier classify model |
       sort -k2 -g | column -t
-    tools/text-classifier/html-tokenizer.cc   0.0106704822
-    tools/text-classifier/23andme.cc          0.0110902358
-    tools/text-classifier/text-classifier.cc  0.0284913629
-    tools/text-classifier/html-tokenizer.h    0.0651432425
-    tools/text-classifier/23andme.h           0.0669780597
+    tools/text-classifier/23andme.cc          -0.00541283842
+    tools/text-classifier/html-tokenizer.cc   -0.0045679328
+    tools/text-classifier/text-classifier.cc  -0.00221988652
+    tools/text-classifier/html-tokenizer.h    0.0142970262
+    tools/text-classifier/23andme.h           0.0146083925
 
 # External Dependencies
 
