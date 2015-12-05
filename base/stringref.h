@@ -23,6 +23,7 @@ namespace ev {
 // allocations.
 class StringRef {
  public:
+  // Constucts an empty string.
   StringRef() = default;
 
   StringRef(const char* str, size_t size) : data_(str), size_(size) {}
@@ -78,6 +79,7 @@ class StringRef {
 
   // Similar to pop_front(), but consumes multiple elements.
   void Consume(size_t amount) {
+    KJ_ASSERT(amount <= size_);
     data_ += amount;
     size_ -= amount;
   }
@@ -101,6 +103,8 @@ class StringRef {
 
   const char* end() const { return data_ + size_; }
 
+  // Returns a pointer to the first occurrence of the given string,
+  // starting at `from`.  Returns `end()` if no match is found.
   const char* find(const ev::StringRef& needle, size_t from = 0) const {
     auto result =
         memmem(data_ + from, size_ - from, needle.data(), needle.size());
@@ -108,6 +112,8 @@ class StringRef {
     return result ? reinterpret_cast<const char*>(result) : end();
   }
 
+  // Returns a pointer to the first occurrence of the given character, starting
+  // at `from`.  Returns `end()` if no match is found.
   const char* find(char ch, size_t from = 0) const {
     const char* result =
         reinterpret_cast<const char*>(memchr(data_ + from, ch, size_ - from));
@@ -117,12 +123,14 @@ class StringRef {
     return result;
   }
 
+  // Returns a pointer to the last occurrence of the given character in a
+  // string, or `end()` if no match is found.
   const char* rfind(char ch) const {
-    auto result = reinterpret_cast<const char*>(memrchr(data_, ch, size_));
+    for (auto result = end(); result-- != begin(); ) {
+      if (*result == ch) return result;
+    }
 
-    if (!result) return end();
-
-    return result;
+    return end();
   }
 
   const char* find_first_of(const char* set, size_t from = 0) const {

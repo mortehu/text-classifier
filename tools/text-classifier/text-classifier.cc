@@ -47,11 +47,19 @@ enum Strategy {
   kStrategySubstrings,
 };
 
+enum CostFunction {
+  kCostFunctionDefault,
+  kCostFunctionAUROC,
+  kCostFunctionRMSE,
+  kCostFunctionFn,
+};
+
 enum WeightType { kWeightBNS, kWeightIDF, kWeightLogOdds, kWeightNone };
 
 enum Option : char {
   kOptionC = 'C',
   kOptionClassThreshold = 'c',
+  kOptionCostFunction = 'f',
   kOptionEpsilon = 'e',
   kOptionIntercept = 'i',
   kOptionMaxIter = 'I',
@@ -72,6 +80,9 @@ int do_shuffle = 1;
 
 // Set to 1 to do regression instead of classification.
 int do_regression = 0;
+
+CostFunction cost_function = kCostFunctionDefault;
+double cost_parameter;
 
 // Set to 0 to use feature counts, not just presence.
 int do_unique = 1;
@@ -116,6 +127,7 @@ WeightType weight_type = kWeightLogOdds;
 struct option kLongOptions[] = {
     {"C", required_argument, nullptr, kOptionC},
     {"class-threshold", required_argument, nullptr, kOptionClassThreshold},
+    {"cost-function", required_argument, nullptr, kOptionCostFunction},
     {"no-debug", no_argument, &do_debug, 0},
     {"epsilon", required_argument, nullptr, kOptionEpsilon},
     {"intercept", required_argument, nullptr, kOptionIntercept},
@@ -862,15 +874,29 @@ class SVMSolver {
 
     const auto avg_score = sum_score / shard_count;
 
-    const auto score_type = do_regression ? "RMSE" : "AUROC";
-
-    const auto new_best = do_regression ? (avg_score < optimize_minimum_score_)
-                                        : (avg_score > optimize_minimum_score_);
+    const auto new_best = (cost_function == kCostFunctionRMSE)
+                              ? (avg_score < optimize_minimum_score_)
+                              : (avg_score > optimize_minimum_score_);
 
     if (do_debug) {
+      std::string score_type;
+      switch (cost_function) {
+        case kCostFunctionAUROC:
+          score_type = "AUROC";
+          break;
+        case kCostFunctionRMSE:
+          score_type = "RMSE";
+          break;
+        case kCostFunctionFn:
+          score_type = ev::cat("F", ev::DoubleToString(cost_parameter));
+          break;
+        default:
+          KJ_FAIL_REQUIRE("Unknown cost function");
+      }
+
       if (new_best) fprintf(stderr, "\033[32;1m");
       fprintf(stderr, "mean_%1$s=%2$.4f min_%1$s=%3$.4f max_%1$s=%4$.4f\n",
-              score_type, avg_score, min_score, max_score);
+              score_type.c_str(), avg_score, min_score, max_score);
       if (new_best) fprintf(stderr, "\033[m");
     }
 
@@ -1058,44 +1084,83 @@ class SVMSolver {
       if (PGmin_old >= 0) PGmin_old = -HUGE_VAL;
     }
 
-    double auc_roc = 0.0;
+    double result = 0.0;
 
-    if (shard_count > 1) {
-      // Calculate area under ROC using the data that wasn't used for training.
-      std::vector<std::pair<float, float>> results;
-      size_t negative_count = 0;
-      size_t positive_count = 0;
+    switch (cost_function) {
+      case kCostFunctionAUROC: {
+        double auc_roc = 0.0;
 
-      for (const auto document_idx : test_set) {
-        results.emplace_back(Dot(document_idx, w, feature_weights) *
-                                 document_scales[document_idx],
-                             y_binary_[document_idx]);
+        if (shard_count > 1) {
+          // Calculate area under ROC using the data that wasn't used for
+          // training.
+          std::vector<std::pair<float, float>> results;
+          size_t negative_count = 0;
+          size_t positive_count = 0;
 
-        if (y_binary_[document_idx] == -1)
-          ++positive_count;
-        else
-          ++negative_count;
-      }
+          for (const auto document_idx : test_set) {
+            results.emplace_back(Dot(document_idx, w, feature_weights) *
+                                     document_scales[document_idx],
+                                 y_binary_[document_idx]);
 
-      std::sort(results.begin(), results.end(),
-                [](const auto& lhs, const auto& rhs) {
-                  if (lhs.first != rhs.first) return lhs.first < rhs.first;
-                  return lhs.second > rhs.second;
-                });
+            if (y_binary_[document_idx] == -1)
+              ++positive_count;
+            else
+              ++negative_count;
+          }
 
-      size_t seen_negative = 0;
-      for (const auto& r : results) {
-        if (r.second == -1) {
-          ++seen_negative;
-        } else {
-          KJ_ASSERT(r.second == 1);
-          auc_roc += static_cast<double>(seen_negative) /
-                     (negative_count * positive_count);
+          std::sort(results.begin(), results.end(),
+                    [](const auto& lhs, const auto& rhs) {
+            if (lhs.first != rhs.first) return lhs.first < rhs.first;
+            return lhs.second > rhs.second;
+          });
+
+          size_t seen_negative = 0;
+          for (const auto& r : results) {
+            if (r.second == -1) {
+              ++seen_negative;
+            } else {
+              KJ_ASSERT(r.second == 1);
+              auc_roc += static_cast<double>(seen_negative) /
+                         (negative_count * positive_count);
+            }
+          }
+
+          shard_alpha_[shard_idx] = std::move(alpha);
+          shard_feature_weights_[shard_idx] = std::move(feature_weights);
         }
-      }
 
-      shard_alpha_[shard_idx] = std::move(alpha);
-      shard_feature_weights_[shard_idx] = std::move(feature_weights);
+        result = auc_roc;
+      } break;
+
+      case kCostFunctionFn: {
+        size_t true_positives = 0;
+        size_t false_positives = 0;
+        size_t false_negatives = 0;
+        for (const auto document_idx : test_set) {
+          const auto score = Dot(document_idx, w, feature_weights);
+
+          if (score > 0) {
+            if (y_binary_[document_idx] > 0) {
+              ++true_positives;
+            } else {
+              ++false_positives;
+            }
+          } else if (y_binary_[document_idx] > 0) {
+            ++false_negatives;
+          }
+        }
+
+        const auto precision = static_cast<double>(true_positives) /
+                               (true_positives + false_positives);
+        const auto recall = static_cast<double>(true_positives) /
+                            (true_positives + false_negatives);
+
+        result = (1.0 + Pow2(cost_parameter)) * precision * recall /
+                 (Pow2(cost_parameter) * precision + recall);
+      } break;
+
+      default:
+        KJ_FAIL_REQUIRE("Unsupported cost function", cost_function);
     }
 
     if (result_w && result_weights) {
@@ -1103,7 +1168,7 @@ class SVMSolver {
       *result_weights = std::move(feature_weights);
     }
 
-    return auc_roc;
+    return result;
   }
 
   float SolveSVR(float C, float eps, size_t max_iter, size_t shard_idx,
@@ -1265,6 +1330,8 @@ class SVMSolver {
       fprintf(stderr, "*** Reached maximum iteration count (%zu/%zu)\n", iter,
               max_iter);
     }
+
+    KJ_REQUIRE(cost_function == kCostFunctionRMSE);
 
     double rmse = 0.0;
 
@@ -1456,6 +1523,19 @@ int main(int argc, char** argv) try {
         class_threshold = ev::StringToDouble(optarg);
         break;
 
+      case kOptionCostFunction:
+        if (!strcmp(optarg, "auroc")) {
+          cost_function = kCostFunctionAUROC;
+        } else if (!strcmp(optarg, "rmse")) {
+          cost_function = kCostFunctionRMSE;
+        } else if (optarg[0] == 'f' && std::isdigit(optarg[1])) {
+          cost_function = kCostFunctionFn;
+          cost_parameter = ev::StringToDouble(optarg + 1);
+        } else {
+          KJ_FAIL_REQUIRE("Unknown cost function", optarg);
+        }
+        break;
+
       case kOptionEpsilon:
         epsilon = ev::StringToDouble(optarg);
         break;
@@ -1543,6 +1623,8 @@ int main(int argc, char** argv) try {
         "  --min-count=VALUE      value to substitute for zero when "
         "counting feature\n"
         "                             occurrences during weighting [%s]\n"
+        "  --cost-function=auroc|f1|rmse\n"
+        "                        set cost function for hyperparameter selection\n"
         "\n"
         "Regression options:\n"
         "  --regression           do regression instead of classification\n"
@@ -1587,6 +1669,9 @@ int main(int argc, char** argv) try {
     errx(EX_USAGE, "Usage: %s [OPTION]... [--] COMMAND [COMMAND-ARGS]...",
          argv[0]);
 
+  if (cost_function == kCostFunctionDefault)
+    cost_function = do_regression ? kCostFunctionRMSE : kCostFunctionAUROC;
+
   ev::StringRef command(argv[optind++]);
 
   if (command == "learn") {
@@ -1606,7 +1691,7 @@ int main(int argc, char** argv) try {
     std::vector<std::pair<uint32_t, ev::StringRef>> row;
 
     while (!done) {
-      kj::Array<char> buffer;
+      kj::Array<const char> buffer;
 
       if (use_stdin) {
         buffer = ev::ReadFD(STDIN_FILENO);
