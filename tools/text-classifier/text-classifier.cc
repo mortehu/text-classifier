@@ -493,13 +493,19 @@ class SVMSolver {
 
       size_t growth_factor_idx = 0;
 
+      // The score representing a perfect outcome.  If this is achieved, we can
+      // stop tuning hyperparameters.
+      const auto optimum = (cost_function == kCostFunctionRMSE) ? 0.0 : 1.0;
+
       // Set to true if we've seen an improvement in this round, so we should
       // retry the scaling factors from the start before giving up.
       bool do_reset = false;
 
       for (;;) {
-        if (TestParameters(C_pos, C_neg, shard_count, max_iterations, eps)
-                .second) {
+        const auto result =
+            TestParameters(C_pos, C_neg, shard_count, max_iterations, eps);
+        if (result.second) {
+          if (result.first == optimum) break;
           if (growth_factor_idx > 0) do_reset = true;
         } else {
           if (do_regression) break;
