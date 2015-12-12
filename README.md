@@ -34,13 +34,14 @@ Let's teach a model to distinguish between `.h` and `.cc` files:
 Now let's use the model:
 
     $ find tools/text-classifier -name \*.cc -or -name \*.h |
-      xargs text-classifier classify model |
+      xargs text-classifier --no-normalize classify model |
       sort -k2 -g | column -t
-    tools/text-classifier/23andme.cc          -0.00541283842
-    tools/text-classifier/html-tokenizer.cc   -0.0045679328
-    tools/text-classifier/text-classifier.cc  -0.00221988652
-    tools/text-classifier/html-tokenizer.h    0.0142970262
-    tools/text-classifier/23andme.h           0.0146083925
+    tools/text-classifier/23andme.cc          -0.0794910192
+    tools/text-classifier/html-tokenizer.cc   -0.0824450776
+    tools/text-classifier/text-classifier.cc  -0.0853220075
+    tools/text-classifier/23andme.h           0.308668882
+    tools/text-classifier/html-tokenizer.h    0.272325069
+    tools/text-classifier/utf8.h              0.298772722
 
 # External Dependencies
 
