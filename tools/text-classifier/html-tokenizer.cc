@@ -1,7 +1,9 @@
+#include "tools/text-classifier/html-tokenizer.h"
+
 #include "base/string.h"
 #include "base/thread-pool.h"
 #include "index/web/tagsoup.h"
-#include "tools/text-classifier/html-tokenizer.h"
+#include "tools/text-classifier/utf8.h"
 
 namespace {
 
@@ -175,9 +177,16 @@ void HTMLTokenizer::Tokenize(const ev::TagsoupNode* node,
 
 void HTMLTokenizer::Tokenize(const char* begin, const char* end,
                              std::vector<uint64_t>& result) {
-  ev::Tagsoup tagsoup(ev::StringRef(begin, end), region_pool.GetRegion());
+  ev::StringRef data(begin, end);
+  ev::Tagsoup tagsoup(data, region_pool.GetRegion());
 
   Tokenize(tagsoup.Root(), result);
+
+  // Add all non-ASCII characters.
+  while (!data.empty()) {
+    const auto ch = GetUtf8Char(&data);
+    if (ch >= 0x80) result.emplace_back(ch);
+  }
 }
 
 }  // namespace ev

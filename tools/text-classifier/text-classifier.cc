@@ -28,6 +28,7 @@
 #include "base/thread-pool.h"
 #include "tools/text-classifier/23andme.h"
 #include "tools/text-classifier/html-tokenizer.h"
+#include "tools/text-classifier/utf8.h"
 
 using Clock = std::chrono::steady_clock;
 
@@ -200,6 +201,12 @@ void TokenizePlainText(const char* begin, const char* end,
 
     window.emplace_front(token_hash);
     if (window.size() > kWindowMultipliers.size()) window.pop_back();
+  }
+
+  ev::StringRef data(begin, end);
+  while (!data.empty()) {
+    const auto ch = GetUtf8Char(&data);
+    if (ch >= 0x80) result.emplace_back(ch);
   }
 }
 

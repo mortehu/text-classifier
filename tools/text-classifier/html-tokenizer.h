@@ -1,7 +1,12 @@
 #ifndef HTML_TOKENIZER_H_
 #define HTML_TOKENIZER_H_ 1
 
+#include <cstdint>
+#include <deque>
 #include <unordered_set>
+#include <vector>
+
+#include "base/stringref.h"
 
 namespace ev {
 
