@@ -476,7 +476,8 @@ class SVMSolver {
     class_split_ = partition_point - document_order_.begin();
 
     if (C_min_ != C_max_) {
-      optimize_minimum_score_ = do_regression ? HUGE_VAL : 0.0f;
+      optimize_minimum_score_ =
+          (cost_function == kCostFunctionRMSE) ? HUGE_VAL : 0.0f;
 
       float C_pos, C_neg;
 
@@ -1099,81 +1100,93 @@ class SVMSolver {
 
     double result = 0.0;
 
-    switch (cost_function) {
-      case kCostFunctionAUROC: {
-        double auc_roc = 0.0;
+    if (shard_count > 1) {
+      switch (cost_function) {
+        case kCostFunctionAUROC: {
+          double auc_roc = 0.0;
 
-        if (shard_count > 1) {
-          // Calculate area under ROC using the data that wasn't used for
-          // training.
-          std::vector<std::pair<float, float>> results;
-          size_t negative_count = 0;
-          size_t positive_count = 0;
+          if (shard_count > 1) {
+            // Calculate area under ROC using the data that wasn't used for
+            // training.
+            std::vector<std::pair<float, float>> results;
+            size_t negative_count = 0;
+            size_t positive_count = 0;
 
+            for (const auto document_idx : test_set) {
+              results.emplace_back(Dot(document_idx, w, feature_weights) *
+                                       document_scales[document_idx],
+                                   y_binary_[document_idx]);
+
+              if (y_binary_[document_idx] == -1)
+                ++positive_count;
+              else
+                ++negative_count;
+            }
+
+            std::sort(results.begin(), results.end(),
+                      [](const auto& lhs, const auto& rhs) {
+                        if (lhs.first != rhs.first)
+                          return lhs.first < rhs.first;
+                        return lhs.second > rhs.second;
+                      });
+
+            size_t seen_negative = 0;
+            for (const auto& r : results) {
+              if (r.second == -1) {
+                ++seen_negative;
+              } else {
+                KJ_ASSERT(r.second == 1);
+                auc_roc += static_cast<double>(seen_negative) /
+                           (negative_count * positive_count);
+              }
+            }
+
+            shard_alpha_[shard_idx] = std::move(alpha);
+            shard_feature_weights_[shard_idx] = std::move(feature_weights);
+          }
+
+          result = auc_roc;
+        } break;
+
+        case kCostFunctionFn: {
+          size_t true_positives = 0;
+          size_t false_positives = 0;
+          size_t false_negatives = 0;
           for (const auto document_idx : test_set) {
-            results.emplace_back(Dot(document_idx, w, feature_weights) *
-                                     document_scales[document_idx],
-                                 y_binary_[document_idx]);
+            const auto score = Dot(document_idx, w, feature_weights);
 
-            if (y_binary_[document_idx] == -1)
-              ++positive_count;
-            else
-              ++negative_count;
-          }
-
-          std::sort(results.begin(), results.end(),
-                    [](const auto& lhs, const auto& rhs) {
-            if (lhs.first != rhs.first) return lhs.first < rhs.first;
-            return lhs.second > rhs.second;
-          });
-
-          size_t seen_negative = 0;
-          for (const auto& r : results) {
-            if (r.second == -1) {
-              ++seen_negative;
-            } else {
-              KJ_ASSERT(r.second == 1);
-              auc_roc += static_cast<double>(seen_negative) /
-                         (negative_count * positive_count);
+            if (score > 0) {
+              if (y_binary_[document_idx] > 0) {
+                ++true_positives;
+              } else {
+                ++false_positives;
+              }
+            } else if (y_binary_[document_idx] > 0) {
+              ++false_negatives;
             }
           }
 
-          shard_alpha_[shard_idx] = std::move(alpha);
-          shard_feature_weights_[shard_idx] = std::move(feature_weights);
-        }
+          const auto precision = static_cast<double>(true_positives) /
+                                 (true_positives + false_positives);
+          const auto recall = static_cast<double>(true_positives) /
+                              (true_positives + false_negatives);
 
-        result = auc_roc;
-      } break;
+          result = (1.0 + Pow2(cost_parameter)) * precision * recall /
+                   (Pow2(cost_parameter) * precision + recall);
+        } break;
 
-      case kCostFunctionFn: {
-        size_t true_positives = 0;
-        size_t false_positives = 0;
-        size_t false_negatives = 0;
-        for (const auto document_idx : test_set) {
-          const auto score = Dot(document_idx, w, feature_weights);
-
-          if (score > 0) {
-            if (y_binary_[document_idx] > 0) {
-              ++true_positives;
-            } else {
-              ++false_positives;
-            }
-          } else if (y_binary_[document_idx] > 0) {
-            ++false_negatives;
+        case kCostFunctionRMSE: {
+          for (const auto document_idx : test_set) {
+            result += Pow2(Dot(document_idx, w, feature_weights) -
+                           y_binary_[document_idx]);
           }
-        }
 
-        const auto precision = static_cast<double>(true_positives) /
-                               (true_positives + false_positives);
-        const auto recall = static_cast<double>(true_positives) /
-                            (true_positives + false_negatives);
+          if (result > 0) result = std::sqrt(result / test_set.size());
+        } break;
 
-        result = (1.0 + Pow2(cost_parameter)) * precision * recall /
-                 (Pow2(cost_parameter) * precision + recall);
-      } break;
-
-      default:
-        KJ_FAIL_REQUIRE("Unsupported cost function", cost_function);
+        default:
+          KJ_FAIL_REQUIRE("Unsupported cost function", cost_function);
+      }
     }
 
     if (result_w && result_weights) {
