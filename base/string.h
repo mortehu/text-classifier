@@ -32,6 +32,19 @@ std::vector<ev::StringRef> Explode(const ev::StringRef& string,
                                    const ev::StringRef& delimiter,
                                    size_t limit = 0);
 
+template <typename Iterator>
+inline std::string Join(Iterator begin, Iterator end,
+                        const std::string& separator) {
+  std::string result;
+  if (begin == end) return result;
+  result = *begin++;
+  while (begin != end) {
+    result += separator;
+    result += *begin++;
+  }
+  return result;
+}
+
 // Removes leading and trailing white-space from `str`, as determined by
 // std::isspace().
 std::string Trim(std::string str);

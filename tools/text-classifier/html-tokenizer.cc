@@ -109,8 +109,7 @@ void HTMLTokenizer::Tokenize(const ev::TagsoupNode* node,
       if (node->name == "meta") {
         for (auto attr = node->first_attribute; attr;
              attr = attr->next_sibling) {
-          if (attr->name == "name" || attr->name == "property" ||
-              attr->name == "http-equiv") {
+          if (attr->name == "name" || attr->name == "property" || attr->name == "http-equiv") {
             name_hash += ev::Hash(ev::ToLower(attr->content.str())) * 29;
             processed_attribute = attr;
             break;

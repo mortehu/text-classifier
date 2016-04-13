@@ -8,7 +8,7 @@
 namespace ev {
 
 void Tokenize23AndMe(const char* begin, const char* end,
-                     std::vector<uint64_t>& result) {
+                       std::vector<uint64_t>& result) {
   while (begin != end) {
     const auto line_begin = begin;
     auto line_end = begin;
@@ -26,17 +26,13 @@ void Tokenize23AndMe(const char* begin, const char* end,
 
     auto row = ev::Explode(line, "\t");
 
-    for (auto i = row.begin(); i != row.end();) {
-      if (i->size() == 0)
-        i = row.erase(i);
-      else
-        ++i;
+    for (auto i = row.begin(); i != row.end(); ) {
+      if (i->size() == 0) i = row.erase(i); else ++i;
     }
 
     if (row.size() > 5 || row.size() < 4) continue;
 
-    auto feature =
-        ev::Hash(row[1]) * 0x7fffffff + ev::Hash(row[2]) * 0x1fffffffffffffff;
+    auto feature = ev::Hash(row[1]) * 0x7fffffff + ev::Hash(row[2]) * 0x1fffffffffffffff;
 
     if (row.size() == 5) {
       if (row[3].size() != 1 || row[4].size() != 1) continue;

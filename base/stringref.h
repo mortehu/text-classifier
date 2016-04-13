@@ -222,6 +222,33 @@ inline ev::StringRef operator*(kj::_::Stringifier, ev::StringRef str) {
   return str;
 }
 
+class StringRefOrNull {
+ public:
+  StringRefOrNull(std::nullptr_t) : null_(true) {}
+  StringRefOrNull(ev::StringRef str) : string_(str) {}
+
+  bool IsNull() const { return null_; }
+
+  const ev::StringRef& StringRef() const {
+    KJ_ASSERT(!null_);
+    return string_;
+  }
+
+  bool operator==(const ev::StringRefOrNull& rhs) const {
+    if (null_) return rhs.null_;
+    if (rhs.null_) return false;
+    return string_ == rhs.string_;
+  }
+
+  bool operator!=(const ev::StringRefOrNull& rhs) const {
+    return !(*this == rhs);
+  }
+
+ private:
+  bool null_ = false;
+  ev::StringRef string_;
+};
+
 }  // namespace ev
 
 namespace std {

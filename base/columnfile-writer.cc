@@ -1,7 +1,3 @@
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-
 #include "base/columnfile.h"
 
 #include <fcntl.h>
@@ -9,50 +5,21 @@
 
 #include <kj/array.h>
 #include <kj/debug.h>
-
-#if HAVE_LIBSNAPPY
+#include <lz4.h>
+#include <lzma.h>
 #include <snappy.h>
-#endif
 
 #include "base/columnfile-internal.h"
+#include "base/compression.h"
 #include "base/file.h"
 #include "base/macros.h"
+#include "base/thread-pool.h"
 
 namespace ev {
 
 namespace {
 
 using namespace columnfile_internal;
-
-void PutUInt(std::string& output, uint32_t value) {
-  if (value < (1 << 7)) {
-    output.push_back(value);
-  } else if (value < (1 << 13)) {
-    output.push_back((value & 0x3f) | 0x80);
-    output.push_back(value >> 6);
-  } else if (value < (1 << 20)) {
-    output.push_back((value & 0x3f) | 0x80);
-    output.push_back((value >> 6) | 0x80);
-    output.push_back(value >> 13);
-  } else if (value < (1 << 27)) {
-    output.push_back((value & 0x3f) | 0x80);
-    output.push_back((value >> 6) | 0x80);
-    output.push_back((value >> 13) | 0x80);
-    output.push_back(value >> 20);
-  } else {
-    output.push_back((value & 0x3f) | 0x80);
-    output.push_back((value >> 6) | 0x80);
-    output.push_back((value >> 13) | 0x80);
-    output.push_back((value >> 20) | 0x80);
-    output.push_back(value >> 27);
-  }
-}
-
-void PutInt(std::string& output, int32_t value) {
-  static const auto sign_shift = sizeof(value) * 8 - 1;
-
-  PutUInt(output, (value << 1) ^ (value >> sign_shift));
-}
 
 class ColumnFileFdOutput : public ColumnFileOutput {
  public:
@@ -62,7 +29,7 @@ class ColumnFileFdOutput : public ColumnFileOutput {
   }
 
   void Flush(const std::vector<std::pair<uint32_t, ev::StringRef>>& fields,
-             ColumnFileCompression& compression) override;
+             const ColumnFileCompression compression) override;
 
   kj::AutoCloseFd Finalize() override { return std::move(fd_); }
 
@@ -77,7 +44,7 @@ class ColumnFileStringOutput : public ColumnFileOutput {
   }
 
   void Flush(const std::vector<std::pair<uint32_t, ev::StringRef>>& fields,
-             ColumnFileCompression& compression) override;
+             const ColumnFileCompression compression) override;
 
   kj::AutoCloseFd Finalize() override { return nullptr; }
 
@@ -87,7 +54,7 @@ class ColumnFileStringOutput : public ColumnFileOutput {
 
 void ColumnFileFdOutput::Flush(
     const std::vector<std::pair<uint32_t, ev::StringRef>>& fields,
-    ColumnFileCompression& compression) {
+    const ColumnFileCompression compression) {
   std::string buffer;
   buffer.resize(4, 0);
 
@@ -112,7 +79,7 @@ void ColumnFileFdOutput::Flush(
 
 void ColumnFileStringOutput::Flush(
     const std::vector<std::pair<uint32_t, ev::StringRef>>& fields,
-    ColumnFileCompression& compression) {
+    const ColumnFileCompression compression) {
   std::string buffer;
   buffer.resize(4, 0);
 
@@ -138,28 +105,51 @@ void ColumnFileStringOutput::Flush(
 
 }  // namespace
 
-ColumnFileWriter::ColumnFileWriter(std::unique_ptr<ColumnFileOutput> output) {}
+ColumnFileCompression ColumnFileWriter::StringToCompressingAlgorithm(
+    const ev::StringRef& name) {
+  if (name == "none") return kColumnFileCompressionNone;
+#if HAVE_LIBSNAPPY
+  if (name == "snappy") return kColumnFileCompressionSnappy;
+#endif
+#if HAVE_LZ4
+  if (name == "lz4") return kColumnFileCompressionLZ4;
+#endif
+#if HAVE_LZMA
+  if (name == "lzma") return kColumnFileCompressionLZMA;
+#endif
+#if HAVE_ZLIB
+  if (name == "zlib") return kColumnFileCompressionZLIB;
+#endif
+  KJ_FAIL_REQUIRE("Unsupported compression algorithm", name);
+}
+
+ColumnFileWriter::ColumnFileWriter(std::shared_ptr<ColumnFileOutput> output)
+    : output_(std::move(output)) {}
 
 ColumnFileWriter::ColumnFileWriter(kj::AutoCloseFd&& fd)
-    : output_(std::make_unique<ColumnFileFdOutput>(std::move(fd))) {}
+    : output_(std::make_shared<ColumnFileFdOutput>(std::move(fd))) {}
 
 ColumnFileWriter::ColumnFileWriter(const char* path, int mode)
-    : output_(std::make_unique<ColumnFileFdOutput>(
+    : output_(std::make_shared<ColumnFileFdOutput>(
           OpenFile(path, O_CREAT | O_WRONLY, mode))) {}
 
 ColumnFileWriter::ColumnFileWriter(std::string& output)
-    : output_(std::make_unique<ColumnFileStringOutput>(output)) {}
+    : output_(std::make_shared<ColumnFileStringOutput>(output)) {}
 
 ColumnFileWriter::~ColumnFileWriter() { Finalize(); }
 
 void ColumnFileWriter::Put(uint32_t column, const StringRef& data) {
   fields_[column].Put(data);
+  pending_size_ += data.size();
 }
 
-void ColumnFileWriter::PutNull(uint32_t column) { fields_[column].PutNull(); }
+void ColumnFileWriter::PutNull(uint32_t column) {
+  fields_[column].PutNull();
+  ++pending_size_;
+}
 
 void ColumnFileWriter::PutRow(
-    const std::vector<std::pair<uint32_t, StringRef>>& row) {
+    const std::vector<std::pair<uint32_t, StringRefOrNull>>& row) {
   // We iterate simultaneously through the fields_ map and the row, so that if
   // their keys matches, we don't have to perform any binary searches in the
   // map.
@@ -174,7 +164,13 @@ void ColumnFileWriter::PutRow(
         field_it = fields_.emplace(row_it->first, FieldWriter()).first;
     }
 
-    field_it->second.Put(row_it->second);
+    if (row_it->second.IsNull()) {
+      field_it->second.PutNull();
+    } else {
+      const auto& str = row_it->second.StringRef();
+      field_it->second.Put(str);
+      pending_size_ += str.size();
+    }
 
     ++row_it;
     ++field_it;
@@ -184,22 +180,29 @@ void ColumnFileWriter::PutRow(
 void ColumnFileWriter::Flush() {
   if (fields_.empty()) return;
 
+  if (!thread_pool_) thread_pool_ = std::make_unique<ThreadPool>();
+
   std::vector<std::pair<uint32_t, ev::StringRef>> field_data;
   field_data.reserve(fields_.size());
 
   for (auto& field : fields_) {
-    field.second.Finalize(compression_);
+    field.second.Finalize(compression_, *thread_pool_.get());
     field_data.emplace_back(field.first, field.second.Data());
   }
 
   output_->Flush(field_data, compression_);
 
   fields_.clear();
+
+  pending_size_ = 0;
 }
 
 kj::AutoCloseFd ColumnFileWriter::Finalize() {
+  if (!output_) return nullptr;
   Flush();
-  return output_->Finalize();
+  auto result = output_->Finalize();
+  output_.reset();
+  return result;
 }
 
 void ColumnFileWriter::FieldWriter::Put(const StringRef& data) {
@@ -263,8 +266,8 @@ void ColumnFileWriter::FieldWriter::Flush() {
   value_is_null_ = true;
 }
 
-void ColumnFileWriter::FieldWriter::Finalize(
-    ColumnFileCompression compression) {
+void ColumnFileWriter::FieldWriter::Finalize(ColumnFileCompression compression,
+                                             ev::ThreadPool& thread_pool) {
   Flush();
 
   switch (compression) {
@@ -281,12 +284,69 @@ void ColumnFileWriter::FieldWriter::Finalize(
       KJ_REQUIRE(compressed_length <= compressed_data.size());
       compressed_data.resize(compressed_length);
       data_.swap(compressed_data);
-      KJ_REQUIRE(snappy::IsValidCompressedBuffer(data_.data(), data_.size()));
+    } break;
+#endif
+
+#if HAVE_LZ4
+    case kColumnFileCompressionLZ4: {
+      std::string compressed_data;
+      PutUInt(compressed_data, data_.size());
+      const auto data_offset = compressed_data.size();
+      compressed_data.resize(data_offset + LZ4_compressBound(data_.size()));
+
+      const auto compressed_length = LZ4_compress(
+          data_.data(), &compressed_data[data_offset], data_.size());
+      KJ_REQUIRE(data_offset + compressed_length <= compressed_data.size());
+      compressed_data.resize(data_offset + compressed_length);
+      data_.swap(compressed_data);
+    } break;
+#endif
+
+#if HAVE_LZMA
+    case kColumnFileCompressionLZMA: {
+      std::string compressed_data;
+      PutUInt(compressed_data, data_.size());
+      const auto data_offset = compressed_data.size();
+      compressed_data.resize(data_offset +
+                             lzma_stream_buffer_bound(data_.size()));
+
+      lzma_stream ls = LZMA_STREAM_INIT;
+
+      KJ_REQUIRE(LZMA_OK == lzma_easy_encoder(&ls, 1, LZMA_CHECK_CRC32));
+
+      ls.next_in = reinterpret_cast<const uint8_t*>(data_.data());
+      ls.avail_in = data_.size();
+      ls.total_in = data_.size();
+
+      ls.next_out = reinterpret_cast<uint8_t*>(&compressed_data[data_offset]);
+      ls.avail_out = compressed_data.size() - data_offset;
+
+      const auto code_ret = lzma_code(&ls, LZMA_FINISH);
+      KJ_REQUIRE(LZMA_STREAM_END == code_ret, code_ret);
+
+      const auto compressed_length = ls.total_out;
+      KJ_REQUIRE(data_offset + compressed_length <= compressed_data.size());
+
+      lzma_end(&ls);
+
+      compressed_data.resize(data_offset + compressed_length);
+      data_.swap(compressed_data);
+    } break;
+#endif
+
+#if HAVE_ZLIB
+    case kColumnFileCompressionZLIB: {
+      std::string compressed_data;
+      PutUInt(compressed_data, data_.size());
+
+      CompressZLIB(compressed_data, data_, thread_pool);
+
+      data_.swap(compressed_data);
     } break;
 #endif
 
     default:
-      KJ_FAIL_REQUIRE("Unsupported compression scheme", compression);
+      KJ_FAIL_REQUIRE("Unknown compression scheme", compression);
   }
 }
 

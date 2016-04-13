@@ -150,11 +150,16 @@ LTLIBRARIES = $(lib_LTLIBRARIES) $(nobase_lib_LTLIBRARIES) \
 	$(noinst_LTLIBRARIES)
 am__DEPENDENCIES_1 =
 base_libbase_la_DEPENDENCIES = $(am__DEPENDENCIES_1) \
-	$(am__DEPENDENCIES_1)
+	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1)
 am__dirstamp = $(am__leading_dot)dirstamp
-am_base_libbase_la_OBJECTS = base/columnfile-reader.lo \
-	base/columnfile-writer.lo base/error.lo base/file.lo \
-	base/hash.lo base/random.lo base/string.lo
+am_base_libbase_la_OBJECTS =  \
+	base/base_libbase_la-columnfile-reader.lo \
+	base/base_libbase_la-columnfile-writer.lo \
+	base/base_libbase_la-compression.lo \
+	base/base_libbase_la-error.lo base/base_libbase_la-file.lo \
+	base/base_libbase_la-hash.lo base/base_libbase_la-random.lo \
+	base/base_libbase_la-string.lo
 base_libbase_la_OBJECTS = $(am_base_libbase_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
@@ -167,6 +172,8 @@ PROGRAMS = $(bin_PROGRAMS) $(noinst_PROGRAMS)
 am_tools_text_classifier_text_classifier_OBJECTS =  \
 	tools/text-classifier/23andme.$(OBJEXT) \
 	tools/text-classifier/html-tokenizer.$(OBJEXT) \
+	tools/text-classifier/model.$(OBJEXT) \
+	tools/text-classifier/svm.$(OBJEXT) \
 	tools/text-classifier/text-classifier.$(OBJEXT)
 tools_text_classifier_text_classifier_OBJECTS =  \
 	$(am_tools_text_classifier_text_classifier_OBJECTS)
@@ -207,6 +214,24 @@ AM_V_CXXLD = $(am__v_CXXLD_@AM_V@)
 am__v_CXXLD_ = $(am__v_CXXLD_@AM_DEFAULT_V@)
 am__v_CXXLD_0 = @echo "  CXXLD   " $@;
 am__v_CXXLD_1 = 
+COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
+	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
+LTCOMPILE = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) \
+	$(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) \
+	$(AM_CFLAGS) $(CFLAGS)
+AM_V_CC = $(am__v_CC_@AM_V@)
+am__v_CC_ = $(am__v_CC_@AM_DEFAULT_V@)
+am__v_CC_0 = @echo "  CC      " $@;
+am__v_CC_1 = 
+CCLD = $(CC)
+LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
+	$(AM_LDFLAGS) $(LDFLAGS) -o $@
+AM_V_CCLD = $(am__v_CCLD_@AM_V@)
+am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
+am__v_CCLD_0 = @echo "  CCLD    " $@;
+am__v_CCLD_1 = 
 SOURCES = $(base_libbase_la_SOURCES) $(index_libtagsoup_la_SOURCES) \
 	$(tools_text_classifier_text_classifier_SOURCES)
 DIST_SOURCES = $(base_libbase_la_SOURCES) \
@@ -464,6 +489,8 @@ DEFS = @DEFS@
 DEPDIR = @DEPDIR@
 DLLTOOL = @DLLTOOL@
 DSYMUTIL = @DSYMUTIL@
+DUMMYZ_CFLAGS = @DUMMYZ_CFLAGS@
+DUMMYZ_LIBS = @DUMMYZ_LIBS@
 DUMPBIN = @DUMPBIN@
 ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
@@ -479,12 +506,17 @@ INSTALL_SCRIPT = @INSTALL_SCRIPT@
 INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
 LD = @LD@
 LDFLAGS = @LDFLAGS@
+LIBLZ4_CFLAGS = @LIBLZ4_CFLAGS@
+LIBLZ4_LIBS = @LIBLZ4_LIBS@
+LIBLZMA_CFLAGS = @LIBLZMA_CFLAGS@
+LIBLZMA_LIBS = @LIBLZMA_LIBS@
 LIBOBJS = @LIBOBJS@
 LIBS = @LIBS@
 LIBTOOL = @LIBTOOL@
 LIPO = @LIPO@
 LN_S = @LN_S@
 LTLIBOBJS = @LTLIBOBJS@
+LT_SYS_LIBRARY_PATH = @LT_SYS_LIBRARY_PATH@
 MAINT = @MAINT@
 MAKEINFO = @MAKEINFO@
 MANIFEST_TOOL = @MANIFEST_TOOL@
@@ -512,6 +544,8 @@ SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
 VERSION = @VERSION@
+ZLIB_CFLAGS = @ZLIB_CFLAGS@
+ZLIB_LIBS = @ZLIB_LIBS@
 abs_builddir = @abs_builddir@
 abs_srcdir = @abs_srcdir@
 abs_top_builddir = @abs_top_builddir@
@@ -580,23 +614,39 @@ AM_CFLAGS = -g -Wall -march=native
 AM_CXXFLAGS = -g -Wall -march=native
 AM_LDFLAGS = -lpthread
 ACLOCAL_AMFLAGS = -I m4
+base_libbase_la_CPPFLAGS = \
+  $(AM_CPPFLAGS) \
+  $(LIBLZ4_CFLAGS) \
+  $(LIBLZMA_CFLAGS) \
+  $(ZLIB_CFLAGS)
+
 base_libbase_la_SOURCES = \
   base/columnfile-reader.cc \
   base/columnfile-writer.cc \
+  base/compression.cc \
   base/error.cc \
   base/file.cc \
   base/hash.cc \
   base/random.cc \
   base/string.cc
 
-base_libbase_la_LIBADD = $(CAPNP_LIBS) $(am__append_1)
+base_libbase_la_LIBADD = $(CAPNP_LIBS) $(LIBLZ4_LIBS) $(LIBLZMA_LIBS) \
+	$(ZLIB_LIBS) $(am__append_1)
 index_libtagsoup_la_SOURCES = \
   index/web/tagsoup.cc
 
 tools_text_classifier_text_classifier_SOURCES = \
   tools/text-classifier/23andme.cc \
+  tools/text-classifier/23andme.h \
+  tools/text-classifier/common.h \
   tools/text-classifier/html-tokenizer.cc \
-  tools/text-classifier/text-classifier.cc
+  tools/text-classifier/html-tokenizer.h \
+  tools/text-classifier/model.cc \
+  tools/text-classifier/model.h \
+  tools/text-classifier/svm.cc \
+  tools/text-classifier/svm.h \
+  tools/text-classifier/text-classifier.cc \
+  tools/text-classifier/utf8.h
 
 tools_text_classifier_text_classifier_LDADD = \
   index/libtagsoup.la \
@@ -754,15 +804,22 @@ base/$(am__dirstamp):
 base/$(DEPDIR)/$(am__dirstamp):
 	@$(MKDIR_P) base/$(DEPDIR)
 	@: > base/$(DEPDIR)/$(am__dirstamp)
-base/columnfile-reader.lo: base/$(am__dirstamp) \
+base/base_libbase_la-columnfile-reader.lo: base/$(am__dirstamp) \
 	base/$(DEPDIR)/$(am__dirstamp)
-base/columnfile-writer.lo: base/$(am__dirstamp) \
+base/base_libbase_la-columnfile-writer.lo: base/$(am__dirstamp) \
 	base/$(DEPDIR)/$(am__dirstamp)
-base/error.lo: base/$(am__dirstamp) base/$(DEPDIR)/$(am__dirstamp)
-base/file.lo: base/$(am__dirstamp) base/$(DEPDIR)/$(am__dirstamp)
-base/hash.lo: base/$(am__dirstamp) base/$(DEPDIR)/$(am__dirstamp)
-base/random.lo: base/$(am__dirstamp) base/$(DEPDIR)/$(am__dirstamp)
-base/string.lo: base/$(am__dirstamp) base/$(DEPDIR)/$(am__dirstamp)
+base/base_libbase_la-compression.lo: base/$(am__dirstamp) \
+	base/$(DEPDIR)/$(am__dirstamp)
+base/base_libbase_la-error.lo: base/$(am__dirstamp) \
+	base/$(DEPDIR)/$(am__dirstamp)
+base/base_libbase_la-file.lo: base/$(am__dirstamp) \
+	base/$(DEPDIR)/$(am__dirstamp)
+base/base_libbase_la-hash.lo: base/$(am__dirstamp) \
+	base/$(DEPDIR)/$(am__dirstamp)
+base/base_libbase_la-random.lo: base/$(am__dirstamp) \
+	base/$(DEPDIR)/$(am__dirstamp)
+base/base_libbase_la-string.lo: base/$(am__dirstamp) \
+	base/$(DEPDIR)/$(am__dirstamp)
 
 base/libbase.la: $(base_libbase_la_OBJECTS) $(base_libbase_la_DEPENDENCIES) $(EXTRA_base_libbase_la_DEPENDENCIES) base/$(am__dirstamp)
 	$(AM_V_CXXLD)$(CXXLINK)  $(base_libbase_la_OBJECTS) $(base_libbase_la_LIBADD) $(LIBS)
@@ -859,6 +916,12 @@ tools/text-classifier/23andme.$(OBJEXT):  \
 tools/text-classifier/html-tokenizer.$(OBJEXT):  \
 	tools/text-classifier/$(am__dirstamp) \
 	tools/text-classifier/$(DEPDIR)/$(am__dirstamp)
+tools/text-classifier/model.$(OBJEXT):  \
+	tools/text-classifier/$(am__dirstamp) \
+	tools/text-classifier/$(DEPDIR)/$(am__dirstamp)
+tools/text-classifier/svm.$(OBJEXT):  \
+	tools/text-classifier/$(am__dirstamp) \
+	tools/text-classifier/$(DEPDIR)/$(am__dirstamp)
 tools/text-classifier/text-classifier.$(OBJEXT):  \
 	tools/text-classifier/$(am__dirstamp) \
 	tools/text-classifier/$(DEPDIR)/$(am__dirstamp)
@@ -913,16 +976,19 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@base/$(DEPDIR)/columnfile-reader.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@base/$(DEPDIR)/columnfile-writer.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@base/$(DEPDIR)/error.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@base/$(DEPDIR)/file.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@base/$(DEPDIR)/hash.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@base/$(DEPDIR)/random.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@base/$(DEPDIR)/string.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@base/$(DEPDIR)/base_libbase_la-columnfile-reader.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@base/$(DEPDIR)/base_libbase_la-columnfile-writer.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@base/$(DEPDIR)/base_libbase_la-compression.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@base/$(DEPDIR)/base_libbase_la-error.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@base/$(DEPDIR)/base_libbase_la-file.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@base/$(DEPDIR)/base_libbase_la-hash.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@base/$(DEPDIR)/base_libbase_la-random.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@base/$(DEPDIR)/base_libbase_la-string.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@index/web/$(DEPDIR)/tagsoup.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@tools/text-classifier/$(DEPDIR)/23andme.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@tools/text-classifier/$(DEPDIR)/html-tokenizer.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@tools/text-classifier/$(DEPDIR)/model.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@tools/text-classifier/$(DEPDIR)/svm.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@tools/text-classifier/$(DEPDIR)/text-classifier.Po@am__quote@
 
 .cc.o:
@@ -948,6 +1014,62 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='$<' object='$@' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(LTCXXCOMPILE) -c -o $@ $<
+
+base/base_libbase_la-columnfile-reader.lo: base/columnfile-reader.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(base_libbase_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT base/base_libbase_la-columnfile-reader.lo -MD -MP -MF base/$(DEPDIR)/base_libbase_la-columnfile-reader.Tpo -c -o base/base_libbase_la-columnfile-reader.lo `test -f 'base/columnfile-reader.cc' || echo '$(srcdir)/'`base/columnfile-reader.cc
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) base/$(DEPDIR)/base_libbase_la-columnfile-reader.Tpo base/$(DEPDIR)/base_libbase_la-columnfile-reader.Plo
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='base/columnfile-reader.cc' object='base/base_libbase_la-columnfile-reader.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(base_libbase_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o base/base_libbase_la-columnfile-reader.lo `test -f 'base/columnfile-reader.cc' || echo '$(srcdir)/'`base/columnfile-reader.cc
+
+base/base_libbase_la-columnfile-writer.lo: base/columnfile-writer.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(base_libbase_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT base/base_libbase_la-columnfile-writer.lo -MD -MP -MF base/$(DEPDIR)/base_libbase_la-columnfile-writer.Tpo -c -o base/base_libbase_la-columnfile-writer.lo `test -f 'base/columnfile-writer.cc' || echo '$(srcdir)/'`base/columnfile-writer.cc
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) base/$(DEPDIR)/base_libbase_la-columnfile-writer.Tpo base/$(DEPDIR)/base_libbase_la-columnfile-writer.Plo
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='base/columnfile-writer.cc' object='base/base_libbase_la-columnfile-writer.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(base_libbase_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o base/base_libbase_la-columnfile-writer.lo `test -f 'base/columnfile-writer.cc' || echo '$(srcdir)/'`base/columnfile-writer.cc
+
+base/base_libbase_la-compression.lo: base/compression.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(base_libbase_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT base/base_libbase_la-compression.lo -MD -MP -MF base/$(DEPDIR)/base_libbase_la-compression.Tpo -c -o base/base_libbase_la-compression.lo `test -f 'base/compression.cc' || echo '$(srcdir)/'`base/compression.cc
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) base/$(DEPDIR)/base_libbase_la-compression.Tpo base/$(DEPDIR)/base_libbase_la-compression.Plo
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='base/compression.cc' object='base/base_libbase_la-compression.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(base_libbase_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o base/base_libbase_la-compression.lo `test -f 'base/compression.cc' || echo '$(srcdir)/'`base/compression.cc
+
+base/base_libbase_la-error.lo: base/error.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(base_libbase_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT base/base_libbase_la-error.lo -MD -MP -MF base/$(DEPDIR)/base_libbase_la-error.Tpo -c -o base/base_libbase_la-error.lo `test -f 'base/error.cc' || echo '$(srcdir)/'`base/error.cc
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) base/$(DEPDIR)/base_libbase_la-error.Tpo base/$(DEPDIR)/base_libbase_la-error.Plo
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='base/error.cc' object='base/base_libbase_la-error.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(base_libbase_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o base/base_libbase_la-error.lo `test -f 'base/error.cc' || echo '$(srcdir)/'`base/error.cc
+
+base/base_libbase_la-file.lo: base/file.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(base_libbase_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT base/base_libbase_la-file.lo -MD -MP -MF base/$(DEPDIR)/base_libbase_la-file.Tpo -c -o base/base_libbase_la-file.lo `test -f 'base/file.cc' || echo '$(srcdir)/'`base/file.cc
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) base/$(DEPDIR)/base_libbase_la-file.Tpo base/$(DEPDIR)/base_libbase_la-file.Plo
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='base/file.cc' object='base/base_libbase_la-file.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(base_libbase_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o base/base_libbase_la-file.lo `test -f 'base/file.cc' || echo '$(srcdir)/'`base/file.cc
+
+base/base_libbase_la-hash.lo: base/hash.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(base_libbase_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT base/base_libbase_la-hash.lo -MD -MP -MF base/$(DEPDIR)/base_libbase_la-hash.Tpo -c -o base/base_libbase_la-hash.lo `test -f 'base/hash.cc' || echo '$(srcdir)/'`base/hash.cc
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) base/$(DEPDIR)/base_libbase_la-hash.Tpo base/$(DEPDIR)/base_libbase_la-hash.Plo
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='base/hash.cc' object='base/base_libbase_la-hash.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(base_libbase_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o base/base_libbase_la-hash.lo `test -f 'base/hash.cc' || echo '$(srcdir)/'`base/hash.cc
+
+base/base_libbase_la-random.lo: base/random.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(base_libbase_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT base/base_libbase_la-random.lo -MD -MP -MF base/$(DEPDIR)/base_libbase_la-random.Tpo -c -o base/base_libbase_la-random.lo `test -f 'base/random.cc' || echo '$(srcdir)/'`base/random.cc
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) base/$(DEPDIR)/base_libbase_la-random.Tpo base/$(DEPDIR)/base_libbase_la-random.Plo
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='base/random.cc' object='base/base_libbase_la-random.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(base_libbase_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o base/base_libbase_la-random.lo `test -f 'base/random.cc' || echo '$(srcdir)/'`base/random.cc
+
+base/base_libbase_la-string.lo: base/string.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(base_libbase_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT base/base_libbase_la-string.lo -MD -MP -MF base/$(DEPDIR)/base_libbase_la-string.Tpo -c -o base/base_libbase_la-string.lo `test -f 'base/string.cc' || echo '$(srcdir)/'`base/string.cc
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) base/$(DEPDIR)/base_libbase_la-string.Tpo base/$(DEPDIR)/base_libbase_la-string.Plo
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='base/string.cc' object='base/base_libbase_la-string.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(base_libbase_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o base/base_libbase_la-string.lo `test -f 'base/string.cc' || echo '$(srcdir)/'`base/string.cc
 
 mostlyclean-libtool:
 	-rm -f *.lo

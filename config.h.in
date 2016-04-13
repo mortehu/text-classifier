@@ -3,11 +3,20 @@
 /* Define to 1 if you have the <dlfcn.h> header file. */
 #undef HAVE_DLFCN_H
 
+/* Have libdummyz */
+#undef HAVE_DUMMYZ
+
 /* Define to 1 if you have the <inttypes.h> header file. */
 #undef HAVE_INTTYPES_H
 
 /* Define to 1 if you have the `snappy' library (-lsnappy). */
 #undef HAVE_LIBSNAPPY
+
+/* Have lz4 */
+#undef HAVE_LZ4
+
+/* Have lzma */
+#undef HAVE_LZMA
 
 /* Define to 1 if you have the <memory.h> header file. */
 #undef HAVE_MEMORY_H
@@ -36,8 +45,10 @@
 /* Define to 1 if you have the <unistd.h> header file. */
 #undef HAVE_UNISTD_H
 
-/* Define to the sub-directory in which libtool stores uninstalled libraries.
-   */
+/* Have zlib */
+#undef HAVE_ZLIB
+
+/* Define to the sub-directory where libtool stores uninstalled libraries. */
 #undef LT_OBJDIR
 
 /* Name of package */
