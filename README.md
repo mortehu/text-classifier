@@ -59,6 +59,9 @@ Now let's use the model on a different set of files:
   * [libsnappy](https://google.github.io/snappy/) (optional), and
   * [libsparsehash](https://github.com/sparsehash/sparsehash).
 
+The corresponding Debian packages are called `libcapnp-dev`, `libsnappy-dev`,
+and `libsparsehash-dev`.
+
 # Reading Material
 
 * [BNS Feature Scaling: An Improved Representation over TF-IDF for SVM Text Classification](http://www.hpl.hp.com/techreports/2007/HPL-2007-32R1.pdf)
