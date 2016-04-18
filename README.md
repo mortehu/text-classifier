@@ -55,7 +55,7 @@ Now let's use the model on a different set of files:
 
 # External Dependencies
 
-  * `libkj` from [Cap'n Proto](https://github.com/sandstorm-io/capnproto),
+  * `libkj` from [Cap'n Proto](https://github.com/sandstorm-io/capnproto) version 0.5 or later,
   * [libsnappy](https://google.github.io/snappy/) (optional), and
   * [libsparsehash](https://github.com/sparsehash/sparsehash).
 
