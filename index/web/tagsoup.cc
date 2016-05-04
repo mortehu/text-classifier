@@ -497,8 +497,8 @@ uint8_t tolower_ASCII(uint8_t ch) {
 }  // namespace
 
 Tagsoup::Tagsoup(const ev::StringRef& input,
-                 ev::concurrency::RegionPool::Region&& region)
-    : region_(region) {
+                 ev::concurrency::RegionPool::Region region)
+    : region_(std::move(region)) {
   Parse(input);
 }
 

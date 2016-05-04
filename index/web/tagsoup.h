@@ -40,7 +40,7 @@ struct TagsoupNode {
 class Tagsoup {
  public:
   Tagsoup(const ev::StringRef& input,
-          ev::concurrency::RegionPool::Region&& region);
+          ev::concurrency::RegionPool::Region region);
 
   ~Tagsoup();
 

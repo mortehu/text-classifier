@@ -22,4 +22,5 @@ ACLOCAL_AMFLAGS = -I m4
 
 include $(srcdir)/base/Makefile.am
 include $(srcdir)/index/Makefile.am
+include $(srcdir)/third_party/gtest/Makefile.am
 include $(srcdir)/tools/text-classifier/Makefile.am

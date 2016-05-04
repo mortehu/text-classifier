@@ -1,7 +1,8 @@
 #include "tools/text-classifier/svm.h"
 
+#include <columnfile.h>
+
 #include "base/cat.h"
-#include "base/columnfile.h"
 #include "base/error.h"
 #include "base/file.h"
 #include "base/macros.h"
@@ -50,7 +51,7 @@ TextClassifierSVMModel::TextClassifierSVMModel(TextClassifierParams params)
   classify_feature_weights_.set_empty_key(0);
 }
 
-void TextClassifierSVMModel::Train(ev::ColumnFileReader reader) {
+void TextClassifierSVMModel::Train(cantera::ColumnFileReader reader) {
   std::vector<uint64_t> all_hashes;
 
   // If the input is larger than main memory, it won't all fit in
@@ -69,11 +70,11 @@ void TextClassifierSVMModel::Train(ev::ColumnFileReader reader) {
     KJ_REQUIRE(row.size() == 2);
     KJ_REQUIRE(row[0].first == 0, row[0].first);
     KJ_REQUIRE(row[1].first == 1, row[1].first);
-    KJ_REQUIRE(!row[0].second.IsNull());
-    KJ_REQUIRE(!row[1].second.IsNull());
-    const auto& header_data = row[0].second.StringRef();
+    KJ_REQUIRE(static_cast<bool>(row[0].second));
+    KJ_REQUIRE(static_cast<bool>(row[1].second));
+    const auto& header_data = row[0].second.value();
     KJ_REQUIRE(header_data.size() == sizeof(Header), header_data.size());
-    const auto& payload_data = row[1].second.StringRef();
+    const auto& payload_data = row[1].second.value();
     KJ_REQUIRE((payload_data.size() % sizeof(uint64_t)) == 0,
                payload_data.size());
 
@@ -178,8 +179,8 @@ void TextClassifierSVMModel::Train(ev::ColumnFileReader reader) {
   while (!reader.End()) {
     auto row = reader.GetRow();
 
-    const auto& header_data = row[0].second.StringRef();
-    const auto& payload_data = row[1].second.StringRef();
+    const auto& header_data = row[0].second.value();
+    const auto& payload_data = row[1].second.value();
     const auto& header = *reinterpret_cast<const Header*>(header_data.data());
 
     Document doc;

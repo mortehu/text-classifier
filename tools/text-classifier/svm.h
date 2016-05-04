@@ -21,8 +21,6 @@ typedef uint8_t HashCountType;
 
 namespace ev {
 
-class ColumnFileReader;
-
 class TextClassifierSVMModel : public TextClassifierModel {
  public:
   struct Document {
@@ -38,7 +36,7 @@ class TextClassifierSVMModel : public TextClassifierModel {
 
   TextClassifierSVMModel(TextClassifierParams params);
 
-  void Train(ColumnFileReader input) override;
+  void Train(cantera::ColumnFileReader input) override;
 
   void Save(kj::AutoCloseFd output) const override;
 

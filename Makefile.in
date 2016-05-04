@@ -93,10 +93,8 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 bin_PROGRAMS = tools/text-classifier/text-classifier$(EXEEXT)
-check_PROGRAMS =
+check_PROGRAMS = tools/text-classifier/reuters_test$(EXEEXT)
 noinst_PROGRAMS =
-TESTS = $(am__EXEEXT_1)
-@HAVE_LIBSNAPPY_TRUE@am__append_1 = -lsnappy
 subdir = .
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/ax_cxx_compile_stdcxx_14.m4 \
@@ -116,6 +114,24 @@ CONFIG_HEADER = config.h
 CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 LIBRARIES = $(noinst_LIBRARIES)
+ARFLAGS = cru
+AM_V_AR = $(am__v_AR_@AM_V@)
+am__v_AR_ = $(am__v_AR_@AM_DEFAULT_V@)
+am__v_AR_0 = @echo "  AR      " $@;
+am__v_AR_1 = 
+third_party_gtest_libgtest_a_AR = $(AR) $(ARFLAGS)
+third_party_gtest_libgtest_a_LIBADD =
+am__dirstamp = $(am__leading_dot)dirstamp
+am_third_party_gtest_libgtest_a_OBJECTS = third_party/gtest/src/third_party_gtest_libgtest_a-gtest-death-test.$(OBJEXT) \
+	third_party/gtest/src/third_party_gtest_libgtest_a-gtest-filepath.$(OBJEXT) \
+	third_party/gtest/src/third_party_gtest_libgtest_a-gtest-port.$(OBJEXT) \
+	third_party/gtest/src/third_party_gtest_libgtest_a-gtest-printers.$(OBJEXT) \
+	third_party/gtest/src/third_party_gtest_libgtest_a-gtest-test-part.$(OBJEXT) \
+	third_party/gtest/src/third_party_gtest_libgtest_a-gtest-typed-test.$(OBJEXT) \
+	third_party/gtest/src/third_party_gtest_libgtest_a-gtest.$(OBJEXT) \
+	third_party/gtest/src/third_party_gtest_libgtest_a-gtest_main.$(OBJEXT)
+third_party_gtest_libgtest_a_OBJECTS =  \
+	$(am_third_party_gtest_libgtest_a_OBJECTS)
 am__vpath_adj_setup = srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`;
 am__vpath_adj = case $$p in \
     $(srcdir)/*) f=`echo "$$p" | sed "s|^$$srcdirstrip/||"`;; \
@@ -149,17 +165,9 @@ am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(libdir)" \
 LTLIBRARIES = $(lib_LTLIBRARIES) $(nobase_lib_LTLIBRARIES) \
 	$(noinst_LTLIBRARIES)
 am__DEPENDENCIES_1 =
-base_libbase_la_DEPENDENCIES = $(am__DEPENDENCIES_1) \
-	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
-	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1)
-am__dirstamp = $(am__leading_dot)dirstamp
-am_base_libbase_la_OBJECTS =  \
-	base/base_libbase_la-columnfile-reader.lo \
-	base/base_libbase_la-columnfile-writer.lo \
-	base/base_libbase_la-compression.lo \
-	base/base_libbase_la-error.lo base/base_libbase_la-file.lo \
-	base/base_libbase_la-hash.lo base/base_libbase_la-random.lo \
-	base/base_libbase_la-string.lo
+base_libbase_la_DEPENDENCIES = $(am__DEPENDENCIES_1)
+am_base_libbase_la_OBJECTS = base/error.lo base/file.lo base/hash.lo \
+	base/random.lo base/string.lo
 base_libbase_la_OBJECTS = $(am_base_libbase_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
@@ -169,6 +177,12 @@ index_libtagsoup_la_LIBADD =
 am_index_libtagsoup_la_OBJECTS = index/web/tagsoup.lo
 index_libtagsoup_la_OBJECTS = $(am_index_libtagsoup_la_OBJECTS)
 PROGRAMS = $(bin_PROGRAMS) $(noinst_PROGRAMS)
+am_tools_text_classifier_reuters_test_OBJECTS =  \
+	tools/text-classifier/reuters_test.$(OBJEXT)
+tools_text_classifier_reuters_test_OBJECTS =  \
+	$(am_tools_text_classifier_reuters_test_OBJECTS)
+tools_text_classifier_reuters_test_DEPENDENCIES = index/libtagsoup.la \
+	base/libbase.la third_party/gtest/libgtest.a
 am_tools_text_classifier_text_classifier_OBJECTS =  \
 	tools/text-classifier/23andme.$(OBJEXT) \
 	tools/text-classifier/html-tokenizer.$(OBJEXT) \
@@ -178,7 +192,7 @@ am_tools_text_classifier_text_classifier_OBJECTS =  \
 tools_text_classifier_text_classifier_OBJECTS =  \
 	$(am_tools_text_classifier_text_classifier_OBJECTS)
 tools_text_classifier_text_classifier_DEPENDENCIES =  \
-	index/libtagsoup.la base/libbase.la
+	index/libtagsoup.la base/libbase.la $(am__DEPENDENCIES_1)
 SCRIPTS = $(bin_SCRIPTS) $(noinst_SCRIPTS)
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
@@ -232,10 +246,13 @@ AM_V_CCLD = $(am__v_CCLD_@AM_V@)
 am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
 am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
-SOURCES = $(base_libbase_la_SOURCES) $(index_libtagsoup_la_SOURCES) \
+SOURCES = $(third_party_gtest_libgtest_a_SOURCES) \
+	$(base_libbase_la_SOURCES) $(index_libtagsoup_la_SOURCES) \
+	$(tools_text_classifier_reuters_test_SOURCES) \
 	$(tools_text_classifier_text_classifier_SOURCES)
-DIST_SOURCES = $(base_libbase_la_SOURCES) \
-	$(index_libtagsoup_la_SOURCES) \
+DIST_SOURCES = $(third_party_gtest_libgtest_a_SOURCES) \
+	$(base_libbase_la_SOURCES) $(index_libtagsoup_la_SOURCES) \
+	$(tools_text_classifier_reuters_test_SOURCES) \
 	$(tools_text_classifier_text_classifier_SOURCES)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
@@ -424,15 +441,10 @@ am__set_TESTS_bases = \
   bases=`for i in $$bases; do echo $$i; done | sed 's/\.log$$//'`; \
   bases=`echo $$bases`
 RECHECK_LOGS = $(TEST_LOGS)
-am__EXEEXT_1 =
 TEST_SUITE_LOG = test-suite.log
 TEST_EXTENSIONS = @EXEEXT@ .test
-am__test_logs1 = $(TESTS:=.log)
-am__test_logs2 = $(am__test_logs1:@EXEEXT@.log=.log)
-TEST_LOGS = $(am__test_logs2:.test.log=.log)
-TEST_LOG_DRIVER = $(SHELL) $(top_srcdir)/test-driver
-TEST_LOG_COMPILE = $(TEST_LOG_COMPILER) $(AM_TEST_LOG_FLAGS) \
-	$(TEST_LOG_FLAGS)
+LOG_DRIVER = $(SHELL) $(top_srcdir)/test-driver
+LOG_COMPILE = $(LOG_COMPILER) $(AM_LOG_FLAGS) $(LOG_FLAGS)
 am__set_b = \
   case '$@' in \
     */*) \
@@ -443,8 +455,15 @@ am__set_b = \
     *) \
       b='$*';; \
   esac
+am__test_logs1 = $(TESTS:=.log)
+am__test_logs2 = $(am__test_logs1:@EXEEXT@.log=.log)
+TEST_LOGS = $(am__test_logs2:.test.log=.log)
+TEST_LOG_DRIVER = $(SHELL) $(top_srcdir)/test-driver
+TEST_LOG_COMPILE = $(TEST_LOG_COMPILER) $(AM_TEST_LOG_FLAGS) \
+	$(TEST_LOG_FLAGS)
 am__DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/base/Makefile.am \
 	$(srcdir)/config.h.in $(srcdir)/index/Makefile.am \
+	$(srcdir)/third_party/gtest/Makefile.am \
 	$(srcdir)/tools/text-classifier/Makefile.am ar-lib compile \
 	config.guess config.sub depcomp install-sh ltmain.sh missing \
 	test-driver
@@ -489,8 +508,6 @@ DEFS = @DEFS@
 DEPDIR = @DEPDIR@
 DLLTOOL = @DLLTOOL@
 DSYMUTIL = @DSYMUTIL@
-DUMMYZ_CFLAGS = @DUMMYZ_CFLAGS@
-DUMMYZ_LIBS = @DUMMYZ_LIBS@
 DUMPBIN = @DUMPBIN@
 ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
@@ -506,10 +523,8 @@ INSTALL_SCRIPT = @INSTALL_SCRIPT@
 INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
 LD = @LD@
 LDFLAGS = @LDFLAGS@
-LIBLZ4_CFLAGS = @LIBLZ4_CFLAGS@
-LIBLZ4_LIBS = @LIBLZ4_LIBS@
-LIBLZMA_CFLAGS = @LIBLZMA_CFLAGS@
-LIBLZMA_LIBS = @LIBLZMA_LIBS@
+LIBCOLUMNFILE_CFLAGS = @LIBCOLUMNFILE_CFLAGS@
+LIBCOLUMNFILE_LIBS = @LIBCOLUMNFILE_LIBS@
 LIBOBJS = @LIBOBJS@
 LIBS = @LIBS@
 LIBTOOL = @LIBTOOL@
@@ -544,8 +559,6 @@ SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
 VERSION = @VERSION@
-ZLIB_CFLAGS = @ZLIB_CFLAGS@
-ZLIB_LIBS = @ZLIB_LIBS@
 abs_builddir = @abs_builddir@
 abs_srcdir = @abs_srcdir@
 abs_top_builddir = @abs_top_builddir@
@@ -606,35 +619,61 @@ lib_LTLIBRARIES =
 man1_MANS = 
 nobase_dist_pkgdata_DATA = 
 nobase_lib_LTLIBRARIES = 
-noinst_LIBRARIES = 
+noinst_LIBRARIES = third_party/gtest/libgtest.a
 noinst_LTLIBRARIES = base/libbase.la index/libtagsoup.la
 noinst_SCRIPTS = 
+TESTS = $(check_PROGRAMS)
 AM_CPPFLAGS = -I$(srcdir) -I. $(CAPNP_CFLAGS)
 AM_CFLAGS = -g -Wall -march=native
 AM_CXXFLAGS = -g -Wall -march=native
 AM_LDFLAGS = -lpthread
 ACLOCAL_AMFLAGS = -I m4
-base_libbase_la_CPPFLAGS = \
-  $(AM_CPPFLAGS) \
-  $(LIBLZ4_CFLAGS) \
-  $(LIBLZMA_CFLAGS) \
-  $(ZLIB_CFLAGS)
-
 base_libbase_la_SOURCES = \
-  base/columnfile-reader.cc \
-  base/columnfile-writer.cc \
-  base/compression.cc \
   base/error.cc \
   base/file.cc \
   base/hash.cc \
   base/random.cc \
   base/string.cc
 
-base_libbase_la_LIBADD = $(CAPNP_LIBS) $(LIBLZ4_LIBS) $(LIBLZMA_LIBS) \
-	$(ZLIB_LIBS) $(am__append_1)
+base_libbase_la_LIBADD = \
+  $(CAPNP_LIBS)
+
 index_libtagsoup_la_SOURCES = \
   index/web/tagsoup.cc
 
+third_party_gtest_libgtest_a_SOURCES = \
+  third_party/gtest/gtest-death-test.h \
+  third_party/gtest/gtest-message.h \
+  third_party/gtest/gtest-param-test.h \
+  third_party/gtest/gtest-printers.h \
+  third_party/gtest/gtest-spi.h \
+  third_party/gtest/gtest-test-part.h \
+  third_party/gtest/gtest-typed-test.h \
+  third_party/gtest/gtest.h \
+  third_party/gtest/gtest_pred_impl.h \
+  third_party/gtest/gtest_prod.h \
+  third_party/gtest/internal/gtest-death-test-internal.h \
+  third_party/gtest/internal/gtest-filepath.h \
+  third_party/gtest/internal/gtest-internal.h \
+  third_party/gtest/internal/gtest-linked_ptr.h \
+  third_party/gtest/internal/gtest-param-util-generated.h \
+  third_party/gtest/internal/gtest-param-util.h \
+  third_party/gtest/internal/gtest-port.h \
+  third_party/gtest/internal/gtest-string.h \
+  third_party/gtest/internal/gtest-tuple.h \
+  third_party/gtest/internal/gtest-type-util.h \
+  third_party/gtest/src/gtest-death-test.cc \
+  third_party/gtest/src/gtest-filepath.cc \
+  third_party/gtest/src/gtest-internal-inl.h \
+  third_party/gtest/src/gtest-internal-inl.h \
+  third_party/gtest/src/gtest-port.cc \
+  third_party/gtest/src/gtest-printers.cc \
+  third_party/gtest/src/gtest-test-part.cc \
+  third_party/gtest/src/gtest-typed-test.cc \
+  third_party/gtest/src/gtest.cc \
+  third_party/gtest/src/gtest_main.cc
+
+third_party_gtest_libgtest_a_CPPFLAGS = -Ithird_party -Ithird_party/gtest $(AM_CPPFLAGS)
 tools_text_classifier_text_classifier_SOURCES = \
   tools/text-classifier/23andme.cc \
   tools/text-classifier/23andme.h \
@@ -650,7 +689,41 @@ tools_text_classifier_text_classifier_SOURCES = \
 
 tools_text_classifier_text_classifier_LDADD = \
   index/libtagsoup.la \
-  base/libbase.la
+  base/libbase.la \
+  $(LIBCOLUMNFILE_LIBS)
+
+tools_text_classifier_reuters_test_SOURCES = \
+  tools/text-classifier/reuters_test.cc
+
+tools_text_classifier_reuters_test_LDADD = \
+  index/libtagsoup.la \
+  base/libbase.la \
+  third_party/gtest/libgtest.a
+
+EXTRA_DIST = \
+  tools/text-classifier/reuters/README.txt \
+  tools/text-classifier/reuters/reut2-000.sgm \
+  tools/text-classifier/reuters/reut2-001.sgm \
+  tools/text-classifier/reuters/reut2-002.sgm \
+  tools/text-classifier/reuters/reut2-003.sgm \
+  tools/text-classifier/reuters/reut2-004.sgm \
+  tools/text-classifier/reuters/reut2-005.sgm \
+  tools/text-classifier/reuters/reut2-006.sgm \
+  tools/text-classifier/reuters/reut2-007.sgm \
+  tools/text-classifier/reuters/reut2-008.sgm \
+  tools/text-classifier/reuters/reut2-009.sgm \
+  tools/text-classifier/reuters/reut2-010.sgm \
+  tools/text-classifier/reuters/reut2-011.sgm \
+  tools/text-classifier/reuters/reut2-012.sgm \
+  tools/text-classifier/reuters/reut2-013.sgm \
+  tools/text-classifier/reuters/reut2-014.sgm \
+  tools/text-classifier/reuters/reut2-015.sgm \
+  tools/text-classifier/reuters/reut2-016.sgm \
+  tools/text-classifier/reuters/reut2-017.sgm \
+  tools/text-classifier/reuters/reut2-018.sgm \
+  tools/text-classifier/reuters/reut2-019.sgm \
+  tools/text-classifier/reuters/reut2-020.sgm \
+  tools/text-classifier/reuters/reut2-021.sgm
 
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-am
@@ -659,7 +732,7 @@ all: config.h
 .SUFFIXES: .cc .lo .log .o .obj .test .test$(EXEEXT) .trs
 am--refresh: Makefile
 	@:
-$(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am $(srcdir)/base/Makefile.am $(srcdir)/index/Makefile.am $(srcdir)/tools/text-classifier/Makefile.am $(am__configure_deps)
+$(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am $(srcdir)/base/Makefile.am $(srcdir)/index/Makefile.am $(srcdir)/third_party/gtest/Makefile.am $(srcdir)/tools/text-classifier/Makefile.am $(am__configure_deps)
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
 	    *$$dep*) \
@@ -681,7 +754,7 @@ Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	    echo ' cd $(top_builddir) && $(SHELL) ./config.status $@ $(am__depfiles_maybe)'; \
 	    cd $(top_builddir) && $(SHELL) ./config.status $@ $(am__depfiles_maybe);; \
 	esac;
-$(srcdir)/base/Makefile.am $(srcdir)/index/Makefile.am $(srcdir)/tools/text-classifier/Makefile.am $(am__empty):
+$(srcdir)/base/Makefile.am $(srcdir)/index/Makefile.am $(srcdir)/third_party/gtest/Makefile.am $(srcdir)/tools/text-classifier/Makefile.am $(am__empty):
 
 $(top_builddir)/config.status: $(top_srcdir)/configure $(CONFIG_STATUS_DEPENDENCIES)
 	$(SHELL) ./config.status --recheck
@@ -709,6 +782,44 @@ distclean-hdr:
 
 clean-noinstLIBRARIES:
 	-test -z "$(noinst_LIBRARIES)" || rm -f $(noinst_LIBRARIES)
+third_party/gtest/src/$(am__dirstamp):
+	@$(MKDIR_P) third_party/gtest/src
+	@: > third_party/gtest/src/$(am__dirstamp)
+third_party/gtest/src/$(DEPDIR)/$(am__dirstamp):
+	@$(MKDIR_P) third_party/gtest/src/$(DEPDIR)
+	@: > third_party/gtest/src/$(DEPDIR)/$(am__dirstamp)
+third_party/gtest/src/third_party_gtest_libgtest_a-gtest-death-test.$(OBJEXT):  \
+	third_party/gtest/src/$(am__dirstamp) \
+	third_party/gtest/src/$(DEPDIR)/$(am__dirstamp)
+third_party/gtest/src/third_party_gtest_libgtest_a-gtest-filepath.$(OBJEXT):  \
+	third_party/gtest/src/$(am__dirstamp) \
+	third_party/gtest/src/$(DEPDIR)/$(am__dirstamp)
+third_party/gtest/src/third_party_gtest_libgtest_a-gtest-port.$(OBJEXT):  \
+	third_party/gtest/src/$(am__dirstamp) \
+	third_party/gtest/src/$(DEPDIR)/$(am__dirstamp)
+third_party/gtest/src/third_party_gtest_libgtest_a-gtest-printers.$(OBJEXT):  \
+	third_party/gtest/src/$(am__dirstamp) \
+	third_party/gtest/src/$(DEPDIR)/$(am__dirstamp)
+third_party/gtest/src/third_party_gtest_libgtest_a-gtest-test-part.$(OBJEXT):  \
+	third_party/gtest/src/$(am__dirstamp) \
+	third_party/gtest/src/$(DEPDIR)/$(am__dirstamp)
+third_party/gtest/src/third_party_gtest_libgtest_a-gtest-typed-test.$(OBJEXT):  \
+	third_party/gtest/src/$(am__dirstamp) \
+	third_party/gtest/src/$(DEPDIR)/$(am__dirstamp)
+third_party/gtest/src/third_party_gtest_libgtest_a-gtest.$(OBJEXT):  \
+	third_party/gtest/src/$(am__dirstamp) \
+	third_party/gtest/src/$(DEPDIR)/$(am__dirstamp)
+third_party/gtest/src/third_party_gtest_libgtest_a-gtest_main.$(OBJEXT):  \
+	third_party/gtest/src/$(am__dirstamp) \
+	third_party/gtest/src/$(DEPDIR)/$(am__dirstamp)
+third_party/gtest/$(am__dirstamp):
+	@$(MKDIR_P) third_party/gtest
+	@: > third_party/gtest/$(am__dirstamp)
+
+third_party/gtest/libgtest.a: $(third_party_gtest_libgtest_a_OBJECTS) $(third_party_gtest_libgtest_a_DEPENDENCIES) $(EXTRA_third_party_gtest_libgtest_a_DEPENDENCIES) third_party/gtest/$(am__dirstamp)
+	$(AM_V_at)-rm -f third_party/gtest/libgtest.a
+	$(AM_V_AR)$(third_party_gtest_libgtest_a_AR) third_party/gtest/libgtest.a $(third_party_gtest_libgtest_a_OBJECTS) $(third_party_gtest_libgtest_a_LIBADD)
+	$(AM_V_at)$(RANLIB) third_party/gtest/libgtest.a
 
 install-libLTLIBRARIES: $(lib_LTLIBRARIES)
 	@$(NORMAL_INSTALL)
@@ -804,22 +915,11 @@ base/$(am__dirstamp):
 base/$(DEPDIR)/$(am__dirstamp):
 	@$(MKDIR_P) base/$(DEPDIR)
 	@: > base/$(DEPDIR)/$(am__dirstamp)
-base/base_libbase_la-columnfile-reader.lo: base/$(am__dirstamp) \
-	base/$(DEPDIR)/$(am__dirstamp)
-base/base_libbase_la-columnfile-writer.lo: base/$(am__dirstamp) \
-	base/$(DEPDIR)/$(am__dirstamp)
-base/base_libbase_la-compression.lo: base/$(am__dirstamp) \
-	base/$(DEPDIR)/$(am__dirstamp)
-base/base_libbase_la-error.lo: base/$(am__dirstamp) \
-	base/$(DEPDIR)/$(am__dirstamp)
-base/base_libbase_la-file.lo: base/$(am__dirstamp) \
-	base/$(DEPDIR)/$(am__dirstamp)
-base/base_libbase_la-hash.lo: base/$(am__dirstamp) \
-	base/$(DEPDIR)/$(am__dirstamp)
-base/base_libbase_la-random.lo: base/$(am__dirstamp) \
-	base/$(DEPDIR)/$(am__dirstamp)
-base/base_libbase_la-string.lo: base/$(am__dirstamp) \
-	base/$(DEPDIR)/$(am__dirstamp)
+base/error.lo: base/$(am__dirstamp) base/$(DEPDIR)/$(am__dirstamp)
+base/file.lo: base/$(am__dirstamp) base/$(DEPDIR)/$(am__dirstamp)
+base/hash.lo: base/$(am__dirstamp) base/$(DEPDIR)/$(am__dirstamp)
+base/random.lo: base/$(am__dirstamp) base/$(DEPDIR)/$(am__dirstamp)
+base/string.lo: base/$(am__dirstamp) base/$(DEPDIR)/$(am__dirstamp)
 
 base/libbase.la: $(base_libbase_la_OBJECTS) $(base_libbase_la_DEPENDENCIES) $(EXTRA_base_libbase_la_DEPENDENCIES) base/$(am__dirstamp)
 	$(AM_V_CXXLD)$(CXXLINK)  $(base_libbase_la_OBJECTS) $(base_libbase_la_LIBADD) $(LIBS)
@@ -910,6 +1010,13 @@ tools/text-classifier/$(am__dirstamp):
 tools/text-classifier/$(DEPDIR)/$(am__dirstamp):
 	@$(MKDIR_P) tools/text-classifier/$(DEPDIR)
 	@: > tools/text-classifier/$(DEPDIR)/$(am__dirstamp)
+tools/text-classifier/reuters_test.$(OBJEXT):  \
+	tools/text-classifier/$(am__dirstamp) \
+	tools/text-classifier/$(DEPDIR)/$(am__dirstamp)
+
+tools/text-classifier/reuters_test$(EXEEXT): $(tools_text_classifier_reuters_test_OBJECTS) $(tools_text_classifier_reuters_test_DEPENDENCIES) $(EXTRA_tools_text_classifier_reuters_test_DEPENDENCIES) tools/text-classifier/$(am__dirstamp)
+	@rm -f tools/text-classifier/reuters_test$(EXEEXT)
+	$(AM_V_CXXLD)$(CXXLINK) $(tools_text_classifier_reuters_test_OBJECTS) $(tools_text_classifier_reuters_test_LDADD) $(LIBS)
 tools/text-classifier/23andme.$(OBJEXT):  \
 	tools/text-classifier/$(am__dirstamp) \
 	tools/text-classifier/$(DEPDIR)/$(am__dirstamp)
@@ -971,23 +1078,30 @@ mostlyclean-compile:
 	-rm -f base/*.lo
 	-rm -f index/web/*.$(OBJEXT)
 	-rm -f index/web/*.lo
+	-rm -f third_party/gtest/src/*.$(OBJEXT)
 	-rm -f tools/text-classifier/*.$(OBJEXT)
 
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@base/$(DEPDIR)/base_libbase_la-columnfile-reader.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@base/$(DEPDIR)/base_libbase_la-columnfile-writer.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@base/$(DEPDIR)/base_libbase_la-compression.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@base/$(DEPDIR)/base_libbase_la-error.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@base/$(DEPDIR)/base_libbase_la-file.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@base/$(DEPDIR)/base_libbase_la-hash.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@base/$(DEPDIR)/base_libbase_la-random.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@base/$(DEPDIR)/base_libbase_la-string.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@base/$(DEPDIR)/error.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@base/$(DEPDIR)/file.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@base/$(DEPDIR)/hash.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@base/$(DEPDIR)/random.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@base/$(DEPDIR)/string.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@index/web/$(DEPDIR)/tagsoup.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@third_party/gtest/src/$(DEPDIR)/third_party_gtest_libgtest_a-gtest-death-test.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@third_party/gtest/src/$(DEPDIR)/third_party_gtest_libgtest_a-gtest-filepath.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@third_party/gtest/src/$(DEPDIR)/third_party_gtest_libgtest_a-gtest-port.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@third_party/gtest/src/$(DEPDIR)/third_party_gtest_libgtest_a-gtest-printers.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@third_party/gtest/src/$(DEPDIR)/third_party_gtest_libgtest_a-gtest-test-part.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@third_party/gtest/src/$(DEPDIR)/third_party_gtest_libgtest_a-gtest-typed-test.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@third_party/gtest/src/$(DEPDIR)/third_party_gtest_libgtest_a-gtest.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@third_party/gtest/src/$(DEPDIR)/third_party_gtest_libgtest_a-gtest_main.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@tools/text-classifier/$(DEPDIR)/23andme.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@tools/text-classifier/$(DEPDIR)/html-tokenizer.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@tools/text-classifier/$(DEPDIR)/model.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@tools/text-classifier/$(DEPDIR)/reuters_test.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@tools/text-classifier/$(DEPDIR)/svm.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@tools/text-classifier/$(DEPDIR)/text-classifier.Po@am__quote@
 
@@ -1015,61 +1129,117 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(LTCXXCOMPILE) -c -o $@ $<
 
-base/base_libbase_la-columnfile-reader.lo: base/columnfile-reader.cc
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(base_libbase_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT base/base_libbase_la-columnfile-reader.lo -MD -MP -MF base/$(DEPDIR)/base_libbase_la-columnfile-reader.Tpo -c -o base/base_libbase_la-columnfile-reader.lo `test -f 'base/columnfile-reader.cc' || echo '$(srcdir)/'`base/columnfile-reader.cc
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) base/$(DEPDIR)/base_libbase_la-columnfile-reader.Tpo base/$(DEPDIR)/base_libbase_la-columnfile-reader.Plo
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='base/columnfile-reader.cc' object='base/base_libbase_la-columnfile-reader.lo' libtool=yes @AMDEPBACKSLASH@
+third_party/gtest/src/third_party_gtest_libgtest_a-gtest-death-test.o: third_party/gtest/src/gtest-death-test.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(third_party_gtest_libgtest_a_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT third_party/gtest/src/third_party_gtest_libgtest_a-gtest-death-test.o -MD -MP -MF third_party/gtest/src/$(DEPDIR)/third_party_gtest_libgtest_a-gtest-death-test.Tpo -c -o third_party/gtest/src/third_party_gtest_libgtest_a-gtest-death-test.o `test -f 'third_party/gtest/src/gtest-death-test.cc' || echo '$(srcdir)/'`third_party/gtest/src/gtest-death-test.cc
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) third_party/gtest/src/$(DEPDIR)/third_party_gtest_libgtest_a-gtest-death-test.Tpo third_party/gtest/src/$(DEPDIR)/third_party_gtest_libgtest_a-gtest-death-test.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='third_party/gtest/src/gtest-death-test.cc' object='third_party/gtest/src/third_party_gtest_libgtest_a-gtest-death-test.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(base_libbase_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o base/base_libbase_la-columnfile-reader.lo `test -f 'base/columnfile-reader.cc' || echo '$(srcdir)/'`base/columnfile-reader.cc
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(third_party_gtest_libgtest_a_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o third_party/gtest/src/third_party_gtest_libgtest_a-gtest-death-test.o `test -f 'third_party/gtest/src/gtest-death-test.cc' || echo '$(srcdir)/'`third_party/gtest/src/gtest-death-test.cc
 
-base/base_libbase_la-columnfile-writer.lo: base/columnfile-writer.cc
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(base_libbase_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT base/base_libbase_la-columnfile-writer.lo -MD -MP -MF base/$(DEPDIR)/base_libbase_la-columnfile-writer.Tpo -c -o base/base_libbase_la-columnfile-writer.lo `test -f 'base/columnfile-writer.cc' || echo '$(srcdir)/'`base/columnfile-writer.cc
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) base/$(DEPDIR)/base_libbase_la-columnfile-writer.Tpo base/$(DEPDIR)/base_libbase_la-columnfile-writer.Plo
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='base/columnfile-writer.cc' object='base/base_libbase_la-columnfile-writer.lo' libtool=yes @AMDEPBACKSLASH@
+third_party/gtest/src/third_party_gtest_libgtest_a-gtest-death-test.obj: third_party/gtest/src/gtest-death-test.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(third_party_gtest_libgtest_a_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT third_party/gtest/src/third_party_gtest_libgtest_a-gtest-death-test.obj -MD -MP -MF third_party/gtest/src/$(DEPDIR)/third_party_gtest_libgtest_a-gtest-death-test.Tpo -c -o third_party/gtest/src/third_party_gtest_libgtest_a-gtest-death-test.obj `if test -f 'third_party/gtest/src/gtest-death-test.cc'; then $(CYGPATH_W) 'third_party/gtest/src/gtest-death-test.cc'; else $(CYGPATH_W) '$(srcdir)/third_party/gtest/src/gtest-death-test.cc'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) third_party/gtest/src/$(DEPDIR)/third_party_gtest_libgtest_a-gtest-death-test.Tpo third_party/gtest/src/$(DEPDIR)/third_party_gtest_libgtest_a-gtest-death-test.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='third_party/gtest/src/gtest-death-test.cc' object='third_party/gtest/src/third_party_gtest_libgtest_a-gtest-death-test.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(base_libbase_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o base/base_libbase_la-columnfile-writer.lo `test -f 'base/columnfile-writer.cc' || echo '$(srcdir)/'`base/columnfile-writer.cc
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(third_party_gtest_libgtest_a_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o third_party/gtest/src/third_party_gtest_libgtest_a-gtest-death-test.obj `if test -f 'third_party/gtest/src/gtest-death-test.cc'; then $(CYGPATH_W) 'third_party/gtest/src/gtest-death-test.cc'; else $(CYGPATH_W) '$(srcdir)/third_party/gtest/src/gtest-death-test.cc'; fi`
 
-base/base_libbase_la-compression.lo: base/compression.cc
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(base_libbase_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT base/base_libbase_la-compression.lo -MD -MP -MF base/$(DEPDIR)/base_libbase_la-compression.Tpo -c -o base/base_libbase_la-compression.lo `test -f 'base/compression.cc' || echo '$(srcdir)/'`base/compression.cc
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) base/$(DEPDIR)/base_libbase_la-compression.Tpo base/$(DEPDIR)/base_libbase_la-compression.Plo
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='base/compression.cc' object='base/base_libbase_la-compression.lo' libtool=yes @AMDEPBACKSLASH@
+third_party/gtest/src/third_party_gtest_libgtest_a-gtest-filepath.o: third_party/gtest/src/gtest-filepath.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(third_party_gtest_libgtest_a_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT third_party/gtest/src/third_party_gtest_libgtest_a-gtest-filepath.o -MD -MP -MF third_party/gtest/src/$(DEPDIR)/third_party_gtest_libgtest_a-gtest-filepath.Tpo -c -o third_party/gtest/src/third_party_gtest_libgtest_a-gtest-filepath.o `test -f 'third_party/gtest/src/gtest-filepath.cc' || echo '$(srcdir)/'`third_party/gtest/src/gtest-filepath.cc
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) third_party/gtest/src/$(DEPDIR)/third_party_gtest_libgtest_a-gtest-filepath.Tpo third_party/gtest/src/$(DEPDIR)/third_party_gtest_libgtest_a-gtest-filepath.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='third_party/gtest/src/gtest-filepath.cc' object='third_party/gtest/src/third_party_gtest_libgtest_a-gtest-filepath.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(base_libbase_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o base/base_libbase_la-compression.lo `test -f 'base/compression.cc' || echo '$(srcdir)/'`base/compression.cc
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(third_party_gtest_libgtest_a_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o third_party/gtest/src/third_party_gtest_libgtest_a-gtest-filepath.o `test -f 'third_party/gtest/src/gtest-filepath.cc' || echo '$(srcdir)/'`third_party/gtest/src/gtest-filepath.cc
 
-base/base_libbase_la-error.lo: base/error.cc
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(base_libbase_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT base/base_libbase_la-error.lo -MD -MP -MF base/$(DEPDIR)/base_libbase_la-error.Tpo -c -o base/base_libbase_la-error.lo `test -f 'base/error.cc' || echo '$(srcdir)/'`base/error.cc
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) base/$(DEPDIR)/base_libbase_la-error.Tpo base/$(DEPDIR)/base_libbase_la-error.Plo
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='base/error.cc' object='base/base_libbase_la-error.lo' libtool=yes @AMDEPBACKSLASH@
+third_party/gtest/src/third_party_gtest_libgtest_a-gtest-filepath.obj: third_party/gtest/src/gtest-filepath.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(third_party_gtest_libgtest_a_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT third_party/gtest/src/third_party_gtest_libgtest_a-gtest-filepath.obj -MD -MP -MF third_party/gtest/src/$(DEPDIR)/third_party_gtest_libgtest_a-gtest-filepath.Tpo -c -o third_party/gtest/src/third_party_gtest_libgtest_a-gtest-filepath.obj `if test -f 'third_party/gtest/src/gtest-filepath.cc'; then $(CYGPATH_W) 'third_party/gtest/src/gtest-filepath.cc'; else $(CYGPATH_W) '$(srcdir)/third_party/gtest/src/gtest-filepath.cc'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) third_party/gtest/src/$(DEPDIR)/third_party_gtest_libgtest_a-gtest-filepath.Tpo third_party/gtest/src/$(DEPDIR)/third_party_gtest_libgtest_a-gtest-filepath.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='third_party/gtest/src/gtest-filepath.cc' object='third_party/gtest/src/third_party_gtest_libgtest_a-gtest-filepath.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(base_libbase_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o base/base_libbase_la-error.lo `test -f 'base/error.cc' || echo '$(srcdir)/'`base/error.cc
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(third_party_gtest_libgtest_a_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o third_party/gtest/src/third_party_gtest_libgtest_a-gtest-filepath.obj `if test -f 'third_party/gtest/src/gtest-filepath.cc'; then $(CYGPATH_W) 'third_party/gtest/src/gtest-filepath.cc'; else $(CYGPATH_W) '$(srcdir)/third_party/gtest/src/gtest-filepath.cc'; fi`
 
-base/base_libbase_la-file.lo: base/file.cc
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(base_libbase_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT base/base_libbase_la-file.lo -MD -MP -MF base/$(DEPDIR)/base_libbase_la-file.Tpo -c -o base/base_libbase_la-file.lo `test -f 'base/file.cc' || echo '$(srcdir)/'`base/file.cc
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) base/$(DEPDIR)/base_libbase_la-file.Tpo base/$(DEPDIR)/base_libbase_la-file.Plo
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='base/file.cc' object='base/base_libbase_la-file.lo' libtool=yes @AMDEPBACKSLASH@
+third_party/gtest/src/third_party_gtest_libgtest_a-gtest-port.o: third_party/gtest/src/gtest-port.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(third_party_gtest_libgtest_a_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT third_party/gtest/src/third_party_gtest_libgtest_a-gtest-port.o -MD -MP -MF third_party/gtest/src/$(DEPDIR)/third_party_gtest_libgtest_a-gtest-port.Tpo -c -o third_party/gtest/src/third_party_gtest_libgtest_a-gtest-port.o `test -f 'third_party/gtest/src/gtest-port.cc' || echo '$(srcdir)/'`third_party/gtest/src/gtest-port.cc
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) third_party/gtest/src/$(DEPDIR)/third_party_gtest_libgtest_a-gtest-port.Tpo third_party/gtest/src/$(DEPDIR)/third_party_gtest_libgtest_a-gtest-port.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='third_party/gtest/src/gtest-port.cc' object='third_party/gtest/src/third_party_gtest_libgtest_a-gtest-port.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(base_libbase_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o base/base_libbase_la-file.lo `test -f 'base/file.cc' || echo '$(srcdir)/'`base/file.cc
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(third_party_gtest_libgtest_a_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o third_party/gtest/src/third_party_gtest_libgtest_a-gtest-port.o `test -f 'third_party/gtest/src/gtest-port.cc' || echo '$(srcdir)/'`third_party/gtest/src/gtest-port.cc
 
-base/base_libbase_la-hash.lo: base/hash.cc
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(base_libbase_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT base/base_libbase_la-hash.lo -MD -MP -MF base/$(DEPDIR)/base_libbase_la-hash.Tpo -c -o base/base_libbase_la-hash.lo `test -f 'base/hash.cc' || echo '$(srcdir)/'`base/hash.cc
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) base/$(DEPDIR)/base_libbase_la-hash.Tpo base/$(DEPDIR)/base_libbase_la-hash.Plo
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='base/hash.cc' object='base/base_libbase_la-hash.lo' libtool=yes @AMDEPBACKSLASH@
+third_party/gtest/src/third_party_gtest_libgtest_a-gtest-port.obj: third_party/gtest/src/gtest-port.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(third_party_gtest_libgtest_a_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT third_party/gtest/src/third_party_gtest_libgtest_a-gtest-port.obj -MD -MP -MF third_party/gtest/src/$(DEPDIR)/third_party_gtest_libgtest_a-gtest-port.Tpo -c -o third_party/gtest/src/third_party_gtest_libgtest_a-gtest-port.obj `if test -f 'third_party/gtest/src/gtest-port.cc'; then $(CYGPATH_W) 'third_party/gtest/src/gtest-port.cc'; else $(CYGPATH_W) '$(srcdir)/third_party/gtest/src/gtest-port.cc'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) third_party/gtest/src/$(DEPDIR)/third_party_gtest_libgtest_a-gtest-port.Tpo third_party/gtest/src/$(DEPDIR)/third_party_gtest_libgtest_a-gtest-port.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='third_party/gtest/src/gtest-port.cc' object='third_party/gtest/src/third_party_gtest_libgtest_a-gtest-port.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(base_libbase_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o base/base_libbase_la-hash.lo `test -f 'base/hash.cc' || echo '$(srcdir)/'`base/hash.cc
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(third_party_gtest_libgtest_a_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o third_party/gtest/src/third_party_gtest_libgtest_a-gtest-port.obj `if test -f 'third_party/gtest/src/gtest-port.cc'; then $(CYGPATH_W) 'third_party/gtest/src/gtest-port.cc'; else $(CYGPATH_W) '$(srcdir)/third_party/gtest/src/gtest-port.cc'; fi`
 
-base/base_libbase_la-random.lo: base/random.cc
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(base_libbase_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT base/base_libbase_la-random.lo -MD -MP -MF base/$(DEPDIR)/base_libbase_la-random.Tpo -c -o base/base_libbase_la-random.lo `test -f 'base/random.cc' || echo '$(srcdir)/'`base/random.cc
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) base/$(DEPDIR)/base_libbase_la-random.Tpo base/$(DEPDIR)/base_libbase_la-random.Plo
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='base/random.cc' object='base/base_libbase_la-random.lo' libtool=yes @AMDEPBACKSLASH@
+third_party/gtest/src/third_party_gtest_libgtest_a-gtest-printers.o: third_party/gtest/src/gtest-printers.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(third_party_gtest_libgtest_a_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT third_party/gtest/src/third_party_gtest_libgtest_a-gtest-printers.o -MD -MP -MF third_party/gtest/src/$(DEPDIR)/third_party_gtest_libgtest_a-gtest-printers.Tpo -c -o third_party/gtest/src/third_party_gtest_libgtest_a-gtest-printers.o `test -f 'third_party/gtest/src/gtest-printers.cc' || echo '$(srcdir)/'`third_party/gtest/src/gtest-printers.cc
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) third_party/gtest/src/$(DEPDIR)/third_party_gtest_libgtest_a-gtest-printers.Tpo third_party/gtest/src/$(DEPDIR)/third_party_gtest_libgtest_a-gtest-printers.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='third_party/gtest/src/gtest-printers.cc' object='third_party/gtest/src/third_party_gtest_libgtest_a-gtest-printers.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(base_libbase_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o base/base_libbase_la-random.lo `test -f 'base/random.cc' || echo '$(srcdir)/'`base/random.cc
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(third_party_gtest_libgtest_a_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o third_party/gtest/src/third_party_gtest_libgtest_a-gtest-printers.o `test -f 'third_party/gtest/src/gtest-printers.cc' || echo '$(srcdir)/'`third_party/gtest/src/gtest-printers.cc
 
-base/base_libbase_la-string.lo: base/string.cc
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(base_libbase_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT base/base_libbase_la-string.lo -MD -MP -MF base/$(DEPDIR)/base_libbase_la-string.Tpo -c -o base/base_libbase_la-string.lo `test -f 'base/string.cc' || echo '$(srcdir)/'`base/string.cc
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) base/$(DEPDIR)/base_libbase_la-string.Tpo base/$(DEPDIR)/base_libbase_la-string.Plo
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='base/string.cc' object='base/base_libbase_la-string.lo' libtool=yes @AMDEPBACKSLASH@
+third_party/gtest/src/third_party_gtest_libgtest_a-gtest-printers.obj: third_party/gtest/src/gtest-printers.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(third_party_gtest_libgtest_a_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT third_party/gtest/src/third_party_gtest_libgtest_a-gtest-printers.obj -MD -MP -MF third_party/gtest/src/$(DEPDIR)/third_party_gtest_libgtest_a-gtest-printers.Tpo -c -o third_party/gtest/src/third_party_gtest_libgtest_a-gtest-printers.obj `if test -f 'third_party/gtest/src/gtest-printers.cc'; then $(CYGPATH_W) 'third_party/gtest/src/gtest-printers.cc'; else $(CYGPATH_W) '$(srcdir)/third_party/gtest/src/gtest-printers.cc'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) third_party/gtest/src/$(DEPDIR)/third_party_gtest_libgtest_a-gtest-printers.Tpo third_party/gtest/src/$(DEPDIR)/third_party_gtest_libgtest_a-gtest-printers.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='third_party/gtest/src/gtest-printers.cc' object='third_party/gtest/src/third_party_gtest_libgtest_a-gtest-printers.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(base_libbase_la_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o base/base_libbase_la-string.lo `test -f 'base/string.cc' || echo '$(srcdir)/'`base/string.cc
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(third_party_gtest_libgtest_a_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o third_party/gtest/src/third_party_gtest_libgtest_a-gtest-printers.obj `if test -f 'third_party/gtest/src/gtest-printers.cc'; then $(CYGPATH_W) 'third_party/gtest/src/gtest-printers.cc'; else $(CYGPATH_W) '$(srcdir)/third_party/gtest/src/gtest-printers.cc'; fi`
+
+third_party/gtest/src/third_party_gtest_libgtest_a-gtest-test-part.o: third_party/gtest/src/gtest-test-part.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(third_party_gtest_libgtest_a_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT third_party/gtest/src/third_party_gtest_libgtest_a-gtest-test-part.o -MD -MP -MF third_party/gtest/src/$(DEPDIR)/third_party_gtest_libgtest_a-gtest-test-part.Tpo -c -o third_party/gtest/src/third_party_gtest_libgtest_a-gtest-test-part.o `test -f 'third_party/gtest/src/gtest-test-part.cc' || echo '$(srcdir)/'`third_party/gtest/src/gtest-test-part.cc
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) third_party/gtest/src/$(DEPDIR)/third_party_gtest_libgtest_a-gtest-test-part.Tpo third_party/gtest/src/$(DEPDIR)/third_party_gtest_libgtest_a-gtest-test-part.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='third_party/gtest/src/gtest-test-part.cc' object='third_party/gtest/src/third_party_gtest_libgtest_a-gtest-test-part.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(third_party_gtest_libgtest_a_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o third_party/gtest/src/third_party_gtest_libgtest_a-gtest-test-part.o `test -f 'third_party/gtest/src/gtest-test-part.cc' || echo '$(srcdir)/'`third_party/gtest/src/gtest-test-part.cc
+
+third_party/gtest/src/third_party_gtest_libgtest_a-gtest-test-part.obj: third_party/gtest/src/gtest-test-part.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(third_party_gtest_libgtest_a_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT third_party/gtest/src/third_party_gtest_libgtest_a-gtest-test-part.obj -MD -MP -MF third_party/gtest/src/$(DEPDIR)/third_party_gtest_libgtest_a-gtest-test-part.Tpo -c -o third_party/gtest/src/third_party_gtest_libgtest_a-gtest-test-part.obj `if test -f 'third_party/gtest/src/gtest-test-part.cc'; then $(CYGPATH_W) 'third_party/gtest/src/gtest-test-part.cc'; else $(CYGPATH_W) '$(srcdir)/third_party/gtest/src/gtest-test-part.cc'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) third_party/gtest/src/$(DEPDIR)/third_party_gtest_libgtest_a-gtest-test-part.Tpo third_party/gtest/src/$(DEPDIR)/third_party_gtest_libgtest_a-gtest-test-part.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='third_party/gtest/src/gtest-test-part.cc' object='third_party/gtest/src/third_party_gtest_libgtest_a-gtest-test-part.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(third_party_gtest_libgtest_a_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o third_party/gtest/src/third_party_gtest_libgtest_a-gtest-test-part.obj `if test -f 'third_party/gtest/src/gtest-test-part.cc'; then $(CYGPATH_W) 'third_party/gtest/src/gtest-test-part.cc'; else $(CYGPATH_W) '$(srcdir)/third_party/gtest/src/gtest-test-part.cc'; fi`
+
+third_party/gtest/src/third_party_gtest_libgtest_a-gtest-typed-test.o: third_party/gtest/src/gtest-typed-test.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(third_party_gtest_libgtest_a_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT third_party/gtest/src/third_party_gtest_libgtest_a-gtest-typed-test.o -MD -MP -MF third_party/gtest/src/$(DEPDIR)/third_party_gtest_libgtest_a-gtest-typed-test.Tpo -c -o third_party/gtest/src/third_party_gtest_libgtest_a-gtest-typed-test.o `test -f 'third_party/gtest/src/gtest-typed-test.cc' || echo '$(srcdir)/'`third_party/gtest/src/gtest-typed-test.cc
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) third_party/gtest/src/$(DEPDIR)/third_party_gtest_libgtest_a-gtest-typed-test.Tpo third_party/gtest/src/$(DEPDIR)/third_party_gtest_libgtest_a-gtest-typed-test.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='third_party/gtest/src/gtest-typed-test.cc' object='third_party/gtest/src/third_party_gtest_libgtest_a-gtest-typed-test.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(third_party_gtest_libgtest_a_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o third_party/gtest/src/third_party_gtest_libgtest_a-gtest-typed-test.o `test -f 'third_party/gtest/src/gtest-typed-test.cc' || echo '$(srcdir)/'`third_party/gtest/src/gtest-typed-test.cc
+
+third_party/gtest/src/third_party_gtest_libgtest_a-gtest-typed-test.obj: third_party/gtest/src/gtest-typed-test.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(third_party_gtest_libgtest_a_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT third_party/gtest/src/third_party_gtest_libgtest_a-gtest-typed-test.obj -MD -MP -MF third_party/gtest/src/$(DEPDIR)/third_party_gtest_libgtest_a-gtest-typed-test.Tpo -c -o third_party/gtest/src/third_party_gtest_libgtest_a-gtest-typed-test.obj `if test -f 'third_party/gtest/src/gtest-typed-test.cc'; then $(CYGPATH_W) 'third_party/gtest/src/gtest-typed-test.cc'; else $(CYGPATH_W) '$(srcdir)/third_party/gtest/src/gtest-typed-test.cc'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) third_party/gtest/src/$(DEPDIR)/third_party_gtest_libgtest_a-gtest-typed-test.Tpo third_party/gtest/src/$(DEPDIR)/third_party_gtest_libgtest_a-gtest-typed-test.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='third_party/gtest/src/gtest-typed-test.cc' object='third_party/gtest/src/third_party_gtest_libgtest_a-gtest-typed-test.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(third_party_gtest_libgtest_a_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o third_party/gtest/src/third_party_gtest_libgtest_a-gtest-typed-test.obj `if test -f 'third_party/gtest/src/gtest-typed-test.cc'; then $(CYGPATH_W) 'third_party/gtest/src/gtest-typed-test.cc'; else $(CYGPATH_W) '$(srcdir)/third_party/gtest/src/gtest-typed-test.cc'; fi`
+
+third_party/gtest/src/third_party_gtest_libgtest_a-gtest.o: third_party/gtest/src/gtest.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(third_party_gtest_libgtest_a_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT third_party/gtest/src/third_party_gtest_libgtest_a-gtest.o -MD -MP -MF third_party/gtest/src/$(DEPDIR)/third_party_gtest_libgtest_a-gtest.Tpo -c -o third_party/gtest/src/third_party_gtest_libgtest_a-gtest.o `test -f 'third_party/gtest/src/gtest.cc' || echo '$(srcdir)/'`third_party/gtest/src/gtest.cc
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) third_party/gtest/src/$(DEPDIR)/third_party_gtest_libgtest_a-gtest.Tpo third_party/gtest/src/$(DEPDIR)/third_party_gtest_libgtest_a-gtest.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='third_party/gtest/src/gtest.cc' object='third_party/gtest/src/third_party_gtest_libgtest_a-gtest.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(third_party_gtest_libgtest_a_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o third_party/gtest/src/third_party_gtest_libgtest_a-gtest.o `test -f 'third_party/gtest/src/gtest.cc' || echo '$(srcdir)/'`third_party/gtest/src/gtest.cc
+
+third_party/gtest/src/third_party_gtest_libgtest_a-gtest.obj: third_party/gtest/src/gtest.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(third_party_gtest_libgtest_a_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT third_party/gtest/src/third_party_gtest_libgtest_a-gtest.obj -MD -MP -MF third_party/gtest/src/$(DEPDIR)/third_party_gtest_libgtest_a-gtest.Tpo -c -o third_party/gtest/src/third_party_gtest_libgtest_a-gtest.obj `if test -f 'third_party/gtest/src/gtest.cc'; then $(CYGPATH_W) 'third_party/gtest/src/gtest.cc'; else $(CYGPATH_W) '$(srcdir)/third_party/gtest/src/gtest.cc'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) third_party/gtest/src/$(DEPDIR)/third_party_gtest_libgtest_a-gtest.Tpo third_party/gtest/src/$(DEPDIR)/third_party_gtest_libgtest_a-gtest.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='third_party/gtest/src/gtest.cc' object='third_party/gtest/src/third_party_gtest_libgtest_a-gtest.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(third_party_gtest_libgtest_a_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o third_party/gtest/src/third_party_gtest_libgtest_a-gtest.obj `if test -f 'third_party/gtest/src/gtest.cc'; then $(CYGPATH_W) 'third_party/gtest/src/gtest.cc'; else $(CYGPATH_W) '$(srcdir)/third_party/gtest/src/gtest.cc'; fi`
+
+third_party/gtest/src/third_party_gtest_libgtest_a-gtest_main.o: third_party/gtest/src/gtest_main.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(third_party_gtest_libgtest_a_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT third_party/gtest/src/third_party_gtest_libgtest_a-gtest_main.o -MD -MP -MF third_party/gtest/src/$(DEPDIR)/third_party_gtest_libgtest_a-gtest_main.Tpo -c -o third_party/gtest/src/third_party_gtest_libgtest_a-gtest_main.o `test -f 'third_party/gtest/src/gtest_main.cc' || echo '$(srcdir)/'`third_party/gtest/src/gtest_main.cc
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) third_party/gtest/src/$(DEPDIR)/third_party_gtest_libgtest_a-gtest_main.Tpo third_party/gtest/src/$(DEPDIR)/third_party_gtest_libgtest_a-gtest_main.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='third_party/gtest/src/gtest_main.cc' object='third_party/gtest/src/third_party_gtest_libgtest_a-gtest_main.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(third_party_gtest_libgtest_a_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o third_party/gtest/src/third_party_gtest_libgtest_a-gtest_main.o `test -f 'third_party/gtest/src/gtest_main.cc' || echo '$(srcdir)/'`third_party/gtest/src/gtest_main.cc
+
+third_party/gtest/src/third_party_gtest_libgtest_a-gtest_main.obj: third_party/gtest/src/gtest_main.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(third_party_gtest_libgtest_a_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT third_party/gtest/src/third_party_gtest_libgtest_a-gtest_main.obj -MD -MP -MF third_party/gtest/src/$(DEPDIR)/third_party_gtest_libgtest_a-gtest_main.Tpo -c -o third_party/gtest/src/third_party_gtest_libgtest_a-gtest_main.obj `if test -f 'third_party/gtest/src/gtest_main.cc'; then $(CYGPATH_W) 'third_party/gtest/src/gtest_main.cc'; else $(CYGPATH_W) '$(srcdir)/third_party/gtest/src/gtest_main.cc'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) third_party/gtest/src/$(DEPDIR)/third_party_gtest_libgtest_a-gtest_main.Tpo third_party/gtest/src/$(DEPDIR)/third_party_gtest_libgtest_a-gtest_main.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='third_party/gtest/src/gtest_main.cc' object='third_party/gtest/src/third_party_gtest_libgtest_a-gtest_main.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(third_party_gtest_libgtest_a_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o third_party/gtest/src/third_party_gtest_libgtest_a-gtest_main.obj `if test -f 'third_party/gtest/src/gtest_main.cc'; then $(CYGPATH_W) 'third_party/gtest/src/gtest_main.cc'; else $(CYGPATH_W) '$(srcdir)/third_party/gtest/src/gtest_main.cc'; fi`
 
 mostlyclean-libtool:
 	-rm -f *.lo
@@ -1349,6 +1519,13 @@ recheck: all $(check_PROGRAMS)
 	        am__force_recheck=am--force-recheck \
 	        TEST_LOGS="$$log_list"; \
 	exit $$?
+tools/text-classifier/reuters_test.log: tools/text-classifier/reuters_test$(EXEEXT)
+	@p='tools/text-classifier/reuters_test$(EXEEXT)'; \
+	b='tools/text-classifier/reuters_test'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
 .test.log:
 	@p='$<'; \
 	$(am__set_b); \
@@ -1575,6 +1752,9 @@ distclean-generic:
 	-rm -f index/$(am__dirstamp)
 	-rm -f index/web/$(DEPDIR)/$(am__dirstamp)
 	-rm -f index/web/$(am__dirstamp)
+	-rm -f third_party/gtest/$(am__dirstamp)
+	-rm -f third_party/gtest/src/$(DEPDIR)/$(am__dirstamp)
+	-rm -f third_party/gtest/src/$(am__dirstamp)
 	-rm -f tools/text-classifier/$(DEPDIR)/$(am__dirstamp)
 	-rm -f tools/text-classifier/$(am__dirstamp)
 
@@ -1590,7 +1770,7 @@ clean-am: clean-binPROGRAMS clean-checkPROGRAMS clean-generic \
 
 distclean: distclean-am
 	-rm -f $(am__CONFIG_DISTCLEAN_FILES)
-	-rm -rf base/$(DEPDIR) index/web/$(DEPDIR) tools/text-classifier/$(DEPDIR)
+	-rm -rf base/$(DEPDIR) index/web/$(DEPDIR) third_party/gtest/src/$(DEPDIR) tools/text-classifier/$(DEPDIR)
 	-rm -f Makefile
 distclean-am: clean-am distclean-compile distclean-generic \
 	distclean-hdr distclean-libtool distclean-tags
@@ -1639,7 +1819,7 @@ installcheck-am:
 maintainer-clean: maintainer-clean-am
 	-rm -f $(am__CONFIG_DISTCLEAN_FILES)
 	-rm -rf $(top_srcdir)/autom4te.cache
-	-rm -rf base/$(DEPDIR) index/web/$(DEPDIR) tools/text-classifier/$(DEPDIR)
+	-rm -rf base/$(DEPDIR) index/web/$(DEPDIR) third_party/gtest/src/$(DEPDIR) tools/text-classifier/$(DEPDIR)
 	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-generic
 

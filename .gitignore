@@ -1,5 +1,6 @@
 *.a
 *.cache
+*.gz
 *.la
 *.lai
 *.lo
@@ -19,4 +20,5 @@
 /Makefile
 /config.h
 /libtool
+/tmp
 stamp-h1

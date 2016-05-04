@@ -13,15 +13,17 @@
 
 #include "tools/text-classifier/common.h"
 
-namespace ev {
-
+namespace cantera {
 class ColumnFileReader;
+}  // namespace
+
+namespace ev {
 
 class TextClassifierModel {
  public:
   virtual ~TextClassifierModel();
 
-  virtual void Train(ev::ColumnFileReader input) = 0;
+  virtual void Train(cantera::ColumnFileReader input) = 0;
 
   virtual void Save(kj::AutoCloseFd output) const = 0;
 

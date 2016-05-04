@@ -11,10 +11,10 @@
 #include <getopt.h>
 #include <sysexits.h>
 
+#include <columnfile.h>
 #include <kj/debug.h>
 #include <sparsehash/dense_hash_map>
 
-#include "base/columnfile.h"
 #include "base/error.h"
 #include "base/file.h"
 #include "base/hash.h"
@@ -397,7 +397,7 @@ int main(int argc, char** argv) try {
            argv[0]);
     }
 
-    ev::ColumnFileWriter output(
+    cantera::ColumnFileWriter output(
         ev::OpenFile(argv[optind++], O_WRONLY | O_APPEND | O_CREAT, 0666));
 
     const auto class_id = ev::StringToFloat(argv[optind++]);
@@ -405,7 +405,7 @@ int main(int argc, char** argv) try {
     const bool use_stdin = (optind == argc);
     bool done = false;
 
-    std::vector<std::pair<uint32_t, ev::StringRefOrNull>> row;
+    std::vector<std::pair<uint32_t, cantera::optional_string_view>> row;
 
     while (!done) {
       kj::Array<const char> buffer;
@@ -438,11 +438,12 @@ int main(int argc, char** argv) try {
       hdr.hash_count = doc_hashes.size();
 
       row.clear();
-      row.emplace_back(0, ev::StringRef(reinterpret_cast<const char*>(&hdr),
-                                        sizeof(Header)));
-      row.emplace_back(
-          1, ev::StringRef(reinterpret_cast<const char*>(doc_hashes.data()),
-                           sizeof(doc_hashes[0]) * doc_hashes.size()));
+      row.emplace_back(0,
+                       cantera::string_view{reinterpret_cast<const char*>(&hdr),
+                                            sizeof(Header)});
+      row.emplace_back(1, cantera::string_view{
+                              reinterpret_cast<const char*>(doc_hashes.data()),
+                              sizeof(doc_hashes[0]) * doc_hashes.size()});
       output.PutRow(row);
     }
   } else if (command == "batch-learn") {
@@ -452,7 +453,7 @@ int main(int argc, char** argv) try {
     if (optind + 1 != argc)
       errx(EX_USAGE, "Usage: %s [OPTION]... [--] batch-learn DB-PATH", argv[0]);
 
-    ev::ColumnFileWriter output(
+    cantera::ColumnFileWriter output(
         ev::OpenFile(argv[optind++], O_WRONLY | O_APPEND | O_CREAT, 0666));
 
     ev::ThreadPool thread_pool;
@@ -504,13 +505,15 @@ int main(int argc, char** argv) try {
           hdr.class_id = class_id;
           hdr.hash_count = doc_hashes.size();
 
-          std::vector<std::pair<uint32_t, ev::StringRefOrNull>> row;
+          std::vector<std::pair<uint32_t, cantera::optional_string_view>> row;
 
-          row.emplace_back(0, ev::StringRef(reinterpret_cast<const char*>(&hdr),
-                                            sizeof(Header)));
           row.emplace_back(
-              1, ev::StringRef(reinterpret_cast<const char*>(doc_hashes.data()),
-                               sizeof(doc_hashes[0]) * doc_hashes.size()));
+              0, cantera::string_view{reinterpret_cast<const char*>(&hdr),
+                                      sizeof(Header)});
+          row.emplace_back(1,
+                           cantera::string_view{
+                               reinterpret_cast<const char*>(doc_hashes.data()),
+                               sizeof(doc_hashes[0]) * doc_hashes.size()});
           output.PutRow(row);
 
           if (++buffer_fill == kFlushInterval) {
@@ -614,7 +617,8 @@ int main(int argc, char** argv) try {
            argv[0]);
     }
 
-    model->Train(ev::ColumnFileReader(ev::OpenFile(argv[optind++], O_RDONLY)));
+    model->Train(
+        cantera::ColumnFileReader(ev::OpenFile(argv[optind++], O_RDONLY)));
 
     model->Save(
         ev::OpenFile(argv[optind++], O_WRONLY | O_CREAT | O_TRUNC, 0666));
