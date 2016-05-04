@@ -27,7 +27,7 @@ tools_text_classifier_reuters_test_LDADD = \
   base/libbase.la \
   third_party/gtest/libgtest.a
 
-EXTRA_DIST = \
+EXTRA_DIST += \
   tools/text-classifier/reuters/README.txt \
   tools/text-classifier/reuters/reut2-000.sgm \
   tools/text-classifier/reuters/reut2-001.sgm \

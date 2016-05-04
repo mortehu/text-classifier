@@ -1,0 +1,17 @@
+Source: text-classifier
+Section: science
+Priority: optional
+Maintainer: Morten Hustveit <morten.hustveit@gmail.com>
+Build-Depends: debhelper (>=9)
+Standards-Version: 3.9.6
+Homepage: https://github.com/mortehu/text-classifier/
+
+Package: text-classifier
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Tool for building text classification models
+ This tool uses skip-gram features to build large-scale linear SVM models, with
+ potentially tens of millions of features, to classify documents based on
+ training data provided by the user.
+ .
+ Hyper-parameters are automatically selected using 10-fold cross-validation.

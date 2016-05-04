@@ -13,6 +13,14 @@ noinst_SCRIPTS =
 
 TESTS = $(check_PROGRAMS)
 
+EXTRA_DIST = \
+  debian/changelog \
+  debian/compat \
+  debian/control \
+  debian/copyright \
+  debian/rules \
+  debian/source/format
+
 AM_CPPFLAGS = -I$(srcdir) -I. $(CAPNP_CFLAGS)
 AM_CFLAGS = -g -Wall -march=native
 AM_CXXFLAGS = -g -Wall -march=native
