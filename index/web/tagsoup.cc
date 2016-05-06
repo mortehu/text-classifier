@@ -1,16 +1,21 @@
 #include "index/web/tagsoup.h"
 
 #include <cassert>
-#include <cstring>
-#include <cstdlib>
-#include <cstdio>
 #include <cctype>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <experimental/string_view>
+#include <unordered_map>
+#include <unordered_set>
 
 #include <kj/debug.h>
 
 #include "base/macros.h"
 
 namespace ev {
+
+using string_view = std::experimental::string_view;
 
 const char* TAGSOUP_NODE_ROOT = "#<ROOT>#";
 const char* TAGSOUP_NODE_CONTENT = "#<CONTENT>#";
@@ -36,416 +41,140 @@ static const struct {
   int len;
   const char* name;
   int value;
-} entities[] = {{2, "Mu", 924},
-                {2, "Nu", 925},
-                {2, "Pi", 928},
-                {2, "Xi", 926},
-                {2, "ge", 8805},
-                {2, "gt", '>'},
-                {2, "le", 8804},
-                {2, "lt", '<'},
-                {2, "mu", 956},
-                {2, "ne", 8800},
-                {2, "ni", 8715},
-                {2, "nu", 957},
-                {2, "or", 8744},
-                {2, "pi", 960},
-                {2, "xi", 958},
+} entities[] = {
+    {2, "Mu", 924},         {2, "Nu", 925},         {2, "Pi", 928},
+    {2, "Xi", 926},         {2, "ge", 8805},        {2, "gt", '>'},
+    {2, "le", 8804},        {2, "lt", '<'},         {2, "mu", 956},
+    {2, "ne", 8800},        {2, "ni", 8715},        {2, "nu", 957},
+    {2, "or", 8744},        {2, "pi", 960},         {2, "xi", 958},
 
-                {3, "Chi", 935},
-                {3, "ETH", L'\320'},
-                {3, "Eta", 919},
-                {3, "Phi", 934},
-                {3, "Psi", 936},
-                {3, "Rho", 929},
-                {3, "Tau", 932},
-                {3, "amp", '&'},
-                {3, "and", 8743},
-                {3, "ang", 8736},
-                {3, "cap", 8745},
-                {3, "chi", 967},
-                {3, "cup", 8746},
-                {3, "deg", L'\260'},
-                {3, "eta", 951},
-                {3, "eth", L'\360'},
-                {3, "int", 8747},
-                {3, "loz", 9674},
-                {3, "lrm", 0x8206},
-                {3, "not", L'\254'},
-                {3, "phi", 966},
-                {3, "piv", 982},
-                {3, "psi", 968},
-                {3, "reg", L'\256'},
-                {3, "rho", 961},
-                {3, "rlm", 0x8207},
-                {3, "shy", L'\255'},
-                {3, "sim", 8764},
-                {3, "sub", 8834},
-                {3, "sum", 8721},
-                {3, "sup", 8835},
-                {3, "tau", 964},
-                {3, "uml", L'\250'},
-                {3, "yen", L'\245'},
-                {3, "zwj", 0x8205},
+    {3, "Chi", 935},        {3, "ETH", L'\320'},    {3, "Eta", 919},
+    {3, "Phi", 934},        {3, "Psi", 936},        {3, "Rho", 929},
+    {3, "Tau", 932},        {3, "amp", '&'},        {3, "and", 8743},
+    {3, "ang", 8736},       {3, "cap", 8745},       {3, "chi", 967},
+    {3, "cup", 8746},       {3, "deg", L'\260'},    {3, "eta", 951},
+    {3, "eth", L'\360'},    {3, "int", 8747},       {3, "loz", 9674},
+    {3, "lrm", 0x8206},     {3, "not", L'\254'},    {3, "phi", 966},
+    {3, "piv", 982},        {3, "psi", 968},        {3, "reg", L'\256'},
+    {3, "rho", 961},        {3, "rlm", 0x8207},     {3, "shy", L'\255'},
+    {3, "sim", 8764},       {3, "sub", 8834},       {3, "sum", 8721},
+    {3, "sup", 8835},       {3, "tau", 964},        {3, "uml", L'\250'},
+    {3, "yen", L'\245'},    {3, "zwj", 0x8205},
 
-                {4, "Auml", L'\304'},
-                {4, "Beta", 914},
-                {4, "Euml", L'\313'},
-                {4, "Iota", 921},
-                {4, "Iuml", L'\317'},
-                {4, "Ouml", L'\326'},
-                {4, "Uuml", L'\334'},
-                {4, "Yuml", 0x376},
-                {4, "Zeta", 918},
-                {4, "auml", L'\344'},
-                {4, "beta", 946},
-                {4, "bull", 8226},
-                {4, "cent", L'\242'},
-                {4, "circ", 0x710},
-                {4, "cong", 8773},
-                {4, "copy", 169},
-                {4, "dArr", 8659},
-                {4, "darr", 8595},
-                {4, "emsp", 0x8195},
-                {4, "ensp", 0x8194},
-                {4, "euml", L'\353'},
-                {4, "euro", 0x8364},
-                {4, "fnof", 402},
-                {4, "hArr", 8660},
-                {4, "harr", 8596},
-                {4, "iota", 953},
-                {4, "isin", 8712},
-                {4, "iuml", L'\357'},
-                {4, "lArr", 8656},
-                {4, "lang", 9001},
-                {4, "larr", 8592},
-                {4, "macr", L'\257'},
-                {4, "nbsp", L'\240'},
-                {4, "nsub", 8836},
-                {4, "ordf", L'\252'},
-                {4, "ordm", L'\272'},
-                {4, "ouml", L'\366'},
-                {4, "para", L'\266'},
-                {4, "part", 8706},
-                {4, "perp", 8869},
-                {4, "prod", 8719},
-                {4, "prop", 8733},
-                {4, "quot", '"'},
-                {4, "rArr", 8658},
-                {4, "rang", 9002},
-                {4, "rarr", 8594},
-                {4, "real", 8476},
-                {4, "sdot", 8901},
-                {4, "sect", L'\247'},
-                {4, "sube", 8838},
-                {4, "sup1", L'\271'},
-                {4, "sup2", L'\262'},
-                {4, "sup3", L'\263'},
-                {4, "supe", 8839},
-                {4, "uArr", 8657},
-                {4, "uarr", 8593},
-                {4, "uuml", L'\374'},
-                {4, "yuml", L'\377'},
-                {4, "zeta", 950},
-                {4, "zwnj", 0x8204},
+    {4, "Auml", L'\304'},   {4, "Beta", 914},       {4, "Euml", L'\313'},
+    {4, "Iota", 921},       {4, "Iuml", L'\317'},   {4, "Ouml", L'\326'},
+    {4, "Uuml", L'\334'},   {4, "Yuml", 0x376},     {4, "Zeta", 918},
+    {4, "auml", L'\344'},   {4, "beta", 946},       {4, "bull", 8226},
+    {4, "cent", L'\242'},   {4, "circ", 0x710},     {4, "cong", 8773},
+    {4, "copy", 169},       {4, "dArr", 8659},      {4, "darr", 8595},
+    {4, "emsp", 0x8195},    {4, "ensp", 0x8194},    {4, "euml", L'\353'},
+    {4, "euro", 0x8364},    {4, "fnof", 402},       {4, "hArr", 8660},
+    {4, "harr", 8596},      {4, "iota", 953},       {4, "isin", 8712},
+    {4, "iuml", L'\357'},   {4, "lArr", 8656},      {4, "lang", 9001},
+    {4, "larr", 8592},      {4, "macr", L'\257'},   {4, "nbsp", L'\240'},
+    {4, "nsub", 8836},      {4, "ordf", L'\252'},   {4, "ordm", L'\272'},
+    {4, "ouml", L'\366'},   {4, "para", L'\266'},   {4, "part", 8706},
+    {4, "perp", 8869},      {4, "prod", 8719},      {4, "prop", 8733},
+    {4, "quot", '"'},       {4, "rArr", 8658},      {4, "rang", 9002},
+    {4, "rarr", 8594},      {4, "real", 8476},      {4, "sdot", 8901},
+    {4, "sect", L'\247'},   {4, "sube", 8838},      {4, "sup1", L'\271'},
+    {4, "sup2", L'\262'},   {4, "sup3", L'\263'},   {4, "supe", 8839},
+    {4, "uArr", 8657},      {4, "uarr", 8593},      {4, "uuml", L'\374'},
+    {4, "yuml", L'\377'},   {4, "zeta", 950},       {4, "zwnj", 0x8204},
 
-                {5, "AElig", 198},
-                {5, "Acirc", L'\302'},
-                {5, "Alpha", 913},
-                {5, "Aring", 197},
-                {5, "Delta", 916},
-                {5, "Ecirc", L'\312'},
-                {5, "Gamma", 915},
-                {5, "Icirc", L'\316'},
-                {5, "Kappa", 922},
-                {5, "OElig", 0x338},
-                {5, "Ocirc", L'\324'},
-                {5, "Omega", 937},
-                {5, "Prime", 8243},
-                {5, "Sigma", 931},
-                {5, "THORN", L'\336'},
-                {5, "Theta", 920},
-                {5, "Ucirc", L'\333'},
-                {5, "acirc", L'\342'},
-                {5, "acute", L'\264'},
-                {5, "aelig", 230},
-                {5, "alpha", 945},
-                {5, "aring", 229},
-                {5, "asymp", 8776},
-                {5, "bdquo", 0x8222},
-                {5, "cedil", L'\270'},
-                {5, "clubs", 9827},
-                {5, "crarr", 8629},
-                {5, "delta", 948},
-                {5, "diams", 9830},
-                {5, "ecirc", L'\352'},
-                {5, "empty", 8709},
-                {5, "equiv", 8801},
-                {5, "exist", 8707},
-                {5, "frasl", 8260},
-                {5, "gamma", 947},
-                {5, "icirc", L'\356'},
-                {5, "iexcl", 161},
-                {5, "image", 8465},
-                {5, "infin", 8734},
-                {5, "kappa", 954},
-                {5, "laquo", L'\253'},
-                {5, "lceil", 8968},
-                {5, "ldquo", 0x8220},
-                {5, "lsquo", 0x8216},
-                {5, "mdash", 0x8212},
-                {5, "micro", L'\265'},
-                {5, "minus", 8722},
-                {5, "nabla", 8711},
-                {5, "ndash", 0x8211},
-                {5, "notin", 8713},
-                {5, "ocirc", L'\364'},
-                {5, "oelig", 0x339},
-                {5, "oline", 8254},
-                {5, "omega", 969},
-                {5, "oplus", 8853},
-                {5, "pound", L'\243'},
-                {5, "prime", 8242},
-                {5, "radic", 8730},
-                {5, "raquo", L'\273'},
-                {5, "rceil", 8969},
-                {5, "rdquo", 0x8221},
-                {5, "rsquo", 0x8217},
-                {5, "sbquo", 0x8218},
-                {5, "sigma", 963},
-                {5, "szlig", L'\337'},
-                {5, "theta", 952},
-                {5, "thorn", L'\376'},
-                {5, "tilde", 0x732},
-                {5, "times", L'\327'},
-                {5, "trade", 8482},
-                {5, "ucirc", L'\373'},
-                {5, "upsih", 978},
-                {6, "Lambda", 923},
+    {5, "AElig", 198},      {5, "Acirc", L'\302'},  {5, "Alpha", 913},
+    {5, "Aring", 197},      {5, "Delta", 916},      {5, "Ecirc", L'\312'},
+    {5, "Gamma", 915},      {5, "Icirc", L'\316'},  {5, "Kappa", 922},
+    {5, "OElig", 0x338},    {5, "Ocirc", L'\324'},  {5, "Omega", 937},
+    {5, "Prime", 8243},     {5, "Sigma", 931},      {5, "THORN", L'\336'},
+    {5, "Theta", 920},      {5, "Ucirc", L'\333'},  {5, "acirc", L'\342'},
+    {5, "acute", L'\264'},  {5, "aelig", 230},      {5, "alpha", 945},
+    {5, "aring", 229},      {5, "asymp", 8776},     {5, "bdquo", 0x8222},
+    {5, "cedil", L'\270'},  {5, "clubs", 9827},     {5, "crarr", 8629},
+    {5, "delta", 948},      {5, "diams", 9830},     {5, "ecirc", L'\352'},
+    {5, "empty", 8709},     {5, "equiv", 8801},     {5, "exist", 8707},
+    {5, "frasl", 8260},     {5, "gamma", 947},      {5, "icirc", L'\356'},
+    {5, "iexcl", 161},      {5, "image", 8465},     {5, "infin", 8734},
+    {5, "kappa", 954},      {5, "laquo", L'\253'},  {5, "lceil", 8968},
+    {5, "ldquo", 0x8220},   {5, "lsquo", 0x8216},   {5, "mdash", 0x8212},
+    {5, "micro", L'\265'},  {5, "minus", 8722},     {5, "nabla", 8711},
+    {5, "ndash", 0x8211},   {5, "notin", 8713},     {5, "ocirc", L'\364'},
+    {5, "oelig", 0x339},    {5, "oline", 8254},     {5, "omega", 969},
+    {5, "oplus", 8853},     {5, "pound", L'\243'},  {5, "prime", 8242},
+    {5, "radic", 8730},     {5, "raquo", L'\273'},  {5, "rceil", 8969},
+    {5, "rdquo", 0x8221},   {5, "rsquo", 0x8217},   {5, "sbquo", 0x8218},
+    {5, "sigma", 963},      {5, "szlig", L'\337'},  {5, "theta", 952},
+    {5, "thorn", L'\376'},  {5, "tilde", 0x732},    {5, "times", L'\327'},
+    {5, "trade", 8482},     {5, "ucirc", L'\373'},  {5, "upsih", 978},
+    {6, "Lambda", 923},
 
-                {6, "Aacute", L'\301'},
-                {6, "Agrave", L'\300'},
-                {6, "Atilde", L'\303'},
-                {6, "Ccedil", L'\307'},
-                {6, "Dagger", 0x8225},
-                {6, "Eacute", L'\311'},
-                {6, "Egrave", L'\310'},
-                {6, "Iacute", L'\315'},
-                {6, "Igrave", L'\314'},
-                {6, "Ntilde", L'\321'},
-                {6, "Oacute", L'\323'},
-                {6, "Ograve", L'\322'},
-                {6, "Oslash", 216},
-                {6, "Otilde", L'\325'},
-                {6, "Scaron", 0x352},
-                {6, "Uacute", L'\332'},
-                {6, "Ugrave", L'\331'},
-                {6, "Yacute", L'\335'},
-                {6, "aacute", L'\341'},
-                {6, "agrave", L'\340'},
-                {6, "atilde", L'\343'},
-                {6, "brvbar", L'\246'},
-                {6, "ccedil", L'\347'},
-                {6, "curren", L'\244'},
-                {6, "dagger", 0x8224},
-                {6, "divide", L'\367'},
-                {6, "eacute", L'\351'},
-                {6, "egrave", L'\350'},
-                {6, "forall", 8704},
-                {6, "frac12", L'\275'},
-                {6, "frac14", L'\274'},
-                {6, "frac34", L'\276'},
-                {6, "hearts", 9829},
-                {6, "hellip", 8230},
-                {6, "iacute", L'\355'},
-                {6, "igrave", L'\354'},
-                {6, "iquest", L'\277'},
-                {6, "lambda", 955},
-                {6, "lfloor", 8970},
-                {6, "lowast", 8727},
-                {6, "lsaquo", 0x8249},
-                {6, "middot", L'\267'},
-                {6, "ntilde", L'\361'},
-                {6, "oacute", L'\363'},
-                {6, "ograve", L'\362'},
-                {6, "oslash", 248},
-                {6, "otilde", L'\365'},
-                {6, "otimes", 8855},
-                {6, "permil", 0x8240},
-                {6, "plusmn", L'\261'},
-                {6, "rfloor", 8971},
-                {6, "rsaquo", 0x8250},
-                {6, "scaron", 0x353},
-                {6, "sigmaf", 962},
-                {6, "spades", 9824},
-                {6, "there4", 8756},
-                {6, "thinsp", 0x8201},
-                {6, "uacute", L'\372'},
-                {6, "ugrave", L'\371'},
-                {6, "weierp", 8472},
-                {6, "yacute", L'\375'},
+    {6, "Aacute", L'\301'}, {6, "Agrave", L'\300'}, {6, "Atilde", L'\303'},
+    {6, "Ccedil", L'\307'}, {6, "Dagger", 0x8225},  {6, "Eacute", L'\311'},
+    {6, "Egrave", L'\310'}, {6, "Iacute", L'\315'}, {6, "Igrave", L'\314'},
+    {6, "Ntilde", L'\321'}, {6, "Oacute", L'\323'}, {6, "Ograve", L'\322'},
+    {6, "Oslash", 216},     {6, "Otilde", L'\325'}, {6, "Scaron", 0x352},
+    {6, "Uacute", L'\332'}, {6, "Ugrave", L'\331'}, {6, "Yacute", L'\335'},
+    {6, "aacute", L'\341'}, {6, "agrave", L'\340'}, {6, "atilde", L'\343'},
+    {6, "brvbar", L'\246'}, {6, "ccedil", L'\347'}, {6, "curren", L'\244'},
+    {6, "dagger", 0x8224},  {6, "divide", L'\367'}, {6, "eacute", L'\351'},
+    {6, "egrave", L'\350'}, {6, "forall", 8704},    {6, "frac12", L'\275'},
+    {6, "frac14", L'\274'}, {6, "frac34", L'\276'}, {6, "hearts", 9829},
+    {6, "hellip", 8230},    {6, "iacute", L'\355'}, {6, "igrave", L'\354'},
+    {6, "iquest", L'\277'}, {6, "lambda", 955},     {6, "lfloor", 8970},
+    {6, "lowast", 8727},    {6, "lsaquo", 0x8249},  {6, "middot", L'\267'},
+    {6, "ntilde", L'\361'}, {6, "oacute", L'\363'}, {6, "ograve", L'\362'},
+    {6, "oslash", 248},     {6, "otilde", L'\365'}, {6, "otimes", 8855},
+    {6, "permil", 0x8240},  {6, "plusmn", L'\261'}, {6, "rfloor", 8971},
+    {6, "rsaquo", 0x8250},  {6, "scaron", 0x353},   {6, "sigmaf", 962},
+    {6, "spades", 9824},    {6, "there4", 8756},    {6, "thinsp", 0x8201},
+    {6, "uacute", L'\372'}, {6, "ugrave", L'\371'}, {6, "weierp", 8472},
+    {6, "yacute", L'\375'},
 
-                {7, "Epsilon", 917},
-                {7, "Omicron", 927},
-                {7, "Upsilon", 933},
-                {7, "alefsym", 8501},
-                {7, "epsilon", 949},
-                {7, "omicron", 959},
-                {7, "upsilon", 965},
+    {7, "Epsilon", 917},    {7, "Omicron", 927},    {7, "Upsilon", 933},
+    {7, "alefsym", 8501},   {7, "epsilon", 949},    {7, "omicron", 959},
+    {7, "upsilon", 965},
 
-                {8, "thetasym", 977}};
+    {8, "thetasym", 977}};
 
-static const struct {
-  size_t len;
-  const char* name;
-} empty_elements[] = {
-      {2, "br"},
-      {2, "hr"},
-      {3, "col"},
-      {3, "img"},
-      {4, "area"},
-      {4, "base"},
-      {4, "link"},
-      {4, "meta"},
-      {5, "frame"},
-      {5, "input"},
-      {5, "param"},
-      {7, "isindex"},
-      {8, "basefont"},
+static const std::unordered_set<string_view> kEmptyElements{
+    "br",   "hr",    "col",   "img",   "area",    "base",     "link",
+    "meta", "frame", "input", "param", "isindex", "basefront"};
+
+static const std::unordered_map<string_view, int> kAutocloseeElements{
+    {"p", 0},     {"dd", 1},    {"dt", 1},       {"li", 2},
+    {"td", 3},    {"th", 3},    {"tr", 4},       {"tbody", 5},
+    {"tfoot", 5}, {"thead", 5}, {"colgroup", 4}, {"option", 6},
 };
 
-static const struct {
-  size_t len;
-  const char* name;
-  int group;
-} autoclosee_elements[] = {
-      {1, "p", 0},
-      {2, "dd", 1},
-      {2, "dt", 1},
-      {2, "li", 2},
-      {2, "td", 3},
-      {2, "th", 3},
-      {2, "tr", 4},
-      {5, "tbody", 5},
-      {5, "tfoot", 5},
-      {5, "thead", 5},
-      {8, "colgroup", 4},
-      {6, "option", 6},
-};
-
-static const struct {
-  size_t len;
-  const char* name;
-  int group;
-} autocloser_elements[] = {
-      {1, "p", 0},
-      {2, "dd", 0},
-      {2, "dt", 0},
-      {2, "h1", 0},
-      {2, "h2", 0},
-      {2, "h3", 0},
-      {2, "h4", 0},
-      {2, "hr", 0},
-      {2, "ol", 0},
-      {2, "ul", 0},
-      {3, "div", 0},
-      {3, "pre", 0},
-      {5, "table", 0},
-      {2, "dd", 1},
-      {2, "dt", 1},
-      {2, "li", 2},
-      {2, "td", 3},
-      {2, "th", 3},
-      {2, "tr", 3},
-      {2, "tr", 4},
-      {8, "colgroup", 4},
-      {5, "tbody", 5},
-      {5, "tfoot", 5},
-      {5, "thead", 5},
-      {6, "option", 6},
+static const std::unordered_map<string_view, int> kAutocloserElements{
+    {"colgroup", (1 << 4)}, {"dd", (1 << 0) | (1 << 1)},
+    {"div", (1 << 0)},      {"dt", (1 << 0)},
+    {"dt", (1 << 1)},       {"h1", (1 << 0)},
+    {"h2", (1 << 0)},       {"h3", (1 << 0)},
+    {"h4", (1 << 0)},       {"hr", (1 << 0)},
+    {"li", (1 << 2)},       {"ol", (1 << 0)},
+    {"option", (1 << 6)},   {"p", (1 << 0)},
+    {"pre", (1 << 0)},      {"table", (1 << 0)},
+    {"tbody", (1 << 5)},    {"td", (1 << 3)},
+    {"tfoot", (1 << 5)},    {"th", (1 << 3)},
+    {"thead", (1 << 5)},    {"tr", (1 << 3) | (1 << 4)},
+    {"ul", (1 << 0)},
 };
 
 static int get_autoclosee_group(const char* name, size_t length) {
-  size_t first = 0, half, middle, count;
-  int cmp;
-
-  count = sizeof(autoclosee_elements) / sizeof(autoclosee_elements[0]);
-
-  while (count > 0) {
-    half = count / 2;
-    middle = first + half;
-
-    if (autoclosee_elements[middle].len != length)
-      cmp = autoclosee_elements[middle].len - length;
-    else
-      cmp = strncasecmp(autoclosee_elements[middle].name, name, length);
-
-    if (cmp == 0) return autoclosee_elements[middle].group;
-
-    if (cmp < 0) {
-      first = middle + 1;
-      count -= half - 1;
-    } else
-      count = half;
-  }
-
-  return -1;
+  const auto i = kAutocloseeElements.find(string_view{name, length});
+  if (i == kAutocloseeElements.end()) return -1;
+  return std::get<int>(*i);
 }
 
 static int does_autoclose(const char* name, size_t length, int group) {
-  size_t first = 0, half, middle, count;
-  int cmp;
-
-  count = sizeof(autocloser_elements) / sizeof(autocloser_elements[0]);
-
-  while (count > 0) {
-    half = count / 2;
-    middle = first + half;
-
-    if (autocloser_elements[middle].group != group)
-      cmp = autocloser_elements[middle].group - group;
-    else if (autocloser_elements[middle].len != length)
-      cmp = autocloser_elements[middle].len - length;
-    else
-      cmp = strncasecmp(autocloser_elements[middle].name, name, length);
-
-    if (cmp == 0) return 1;
-
-    if (cmp < 0) {
-      first = middle + 1;
-      count -= half - 1;
-    } else
-      count = half;
-  }
-
-  return 0;
+  const auto i = kAutocloserElements.find(string_view{name, length});
+  if (i == kAutocloserElements.end()) return 0;
+  return 0 != (std::get<int>(*i) & (1 << group));
 }
 
 static int is_empty_element(const char* name, size_t length) {
-  size_t first = 0, half, middle, count;
-  int cmp;
-
-  count = sizeof(autocloser_elements) / sizeof(autocloser_elements[0]);
-
-  while (count > 0) {
-    half = count / 2;
-    middle = first + half;
-
-    if (empty_elements[middle].len != length)
-      cmp = empty_elements[middle].len - length;
-    else
-      cmp = strncasecmp(empty_elements[middle].name, name, length);
-
-    if (cmp == 0) return 1;
-
-    if (cmp < 0) {
-      first = middle + 1;
-      count -= half - 1;
-    } else
-      count = half;
-  }
-
-  return 0;
+  return kEmptyElements.count(string_view{name, length});
 }
 
 static char* tagsoup_utf8_put(char* output, unsigned int ch) {
