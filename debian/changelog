@@ -1,3 +1,9 @@
+text-classifier (1.0.2-1) unstable; urgency=medium
+
+  * Fix buffer overrun bug discovered with -fstack-protector-strong.
+
+ -- Morten Hustveit <morten.hustveit@gmail.com>  Fri, 06 May 2016 18:15:08 -0400
+
 text-classifier (1.0.1-1) unstable; urgency=medium
 
   * Initial release.
