@@ -37,104 +37,100 @@ enum parse_state {
   s_content
 };
 
-static const struct {
-  int len;
-  const char* name;
-  int value;
-} entities[] = {
-    {2, "Mu", 924},         {2, "Nu", 925},         {2, "Pi", 928},
-    {2, "Xi", 926},         {2, "ge", 8805},        {2, "gt", '>'},
-    {2, "le", 8804},        {2, "lt", '<'},         {2, "mu", 956},
-    {2, "ne", 8800},        {2, "ni", 8715},        {2, "nu", 957},
-    {2, "or", 8744},        {2, "pi", 960},         {2, "xi", 958},
+static const std::unordered_map<string_view, char16_t> kEntities = {
+    {"Mu", 924},         {"Nu", 925},         {"Pi", 928},
+    {"Xi", 926},         {"ge", 8805},        {"gt", '>'},
+    {"le", 8804},        {"lt", '<'},         {"mu", 956},
+    {"ne", 8800},        {"ni", 8715},        {"nu", 957},
+    {"or", 8744},        {"pi", 960},         {"xi", 958},
 
-    {3, "Chi", 935},        {3, "ETH", L'\320'},    {3, "Eta", 919},
-    {3, "Phi", 934},        {3, "Psi", 936},        {3, "Rho", 929},
-    {3, "Tau", 932},        {3, "amp", '&'},        {3, "and", 8743},
-    {3, "ang", 8736},       {3, "cap", 8745},       {3, "chi", 967},
-    {3, "cup", 8746},       {3, "deg", L'\260'},    {3, "eta", 951},
-    {3, "eth", L'\360'},    {3, "int", 8747},       {3, "loz", 9674},
-    {3, "lrm", 0x8206},     {3, "not", L'\254'},    {3, "phi", 966},
-    {3, "piv", 982},        {3, "psi", 968},        {3, "reg", L'\256'},
-    {3, "rho", 961},        {3, "rlm", 0x8207},     {3, "shy", L'\255'},
-    {3, "sim", 8764},       {3, "sub", 8834},       {3, "sum", 8721},
-    {3, "sup", 8835},       {3, "tau", 964},        {3, "uml", L'\250'},
-    {3, "yen", L'\245'},    {3, "zwj", 0x8205},
+    {"Chi", 935},        {"ETH", L'\320'},    {"Eta", 919},
+    {"Phi", 934},        {"Psi", 936},        {"Rho", 929},
+    {"Tau", 932},        {"amp", '&'},        {"and", 8743},
+    {"ang", 8736},       {"cap", 8745},       {"chi", 967},
+    {"cup", 8746},       {"deg", L'\260'},    {"eta", 951},
+    {"eth", L'\360'},    {"int", 8747},       {"loz", 9674},
+    {"lrm", 0x8206},     {"not", L'\254'},    {"phi", 966},
+    {"piv", 982},        {"psi", 968},        {"reg", L'\256'},
+    {"rho", 961},        {"rlm", 0x8207},     {"shy", L'\255'},
+    {"sim", 8764},       {"sub", 8834},       {"sum", 8721},
+    {"sup", 8835},       {"tau", 964},        {"uml", L'\250'},
+    {"yen", L'\245'},    {"zwj", 0x8205},
 
-    {4, "Auml", L'\304'},   {4, "Beta", 914},       {4, "Euml", L'\313'},
-    {4, "Iota", 921},       {4, "Iuml", L'\317'},   {4, "Ouml", L'\326'},
-    {4, "Uuml", L'\334'},   {4, "Yuml", 0x376},     {4, "Zeta", 918},
-    {4, "auml", L'\344'},   {4, "beta", 946},       {4, "bull", 8226},
-    {4, "cent", L'\242'},   {4, "circ", 0x710},     {4, "cong", 8773},
-    {4, "copy", 169},       {4, "dArr", 8659},      {4, "darr", 8595},
-    {4, "emsp", 0x8195},    {4, "ensp", 0x8194},    {4, "euml", L'\353'},
-    {4, "euro", 0x8364},    {4, "fnof", 402},       {4, "hArr", 8660},
-    {4, "harr", 8596},      {4, "iota", 953},       {4, "isin", 8712},
-    {4, "iuml", L'\357'},   {4, "lArr", 8656},      {4, "lang", 9001},
-    {4, "larr", 8592},      {4, "macr", L'\257'},   {4, "nbsp", L'\240'},
-    {4, "nsub", 8836},      {4, "ordf", L'\252'},   {4, "ordm", L'\272'},
-    {4, "ouml", L'\366'},   {4, "para", L'\266'},   {4, "part", 8706},
-    {4, "perp", 8869},      {4, "prod", 8719},      {4, "prop", 8733},
-    {4, "quot", '"'},       {4, "rArr", 8658},      {4, "rang", 9002},
-    {4, "rarr", 8594},      {4, "real", 8476},      {4, "sdot", 8901},
-    {4, "sect", L'\247'},   {4, "sube", 8838},      {4, "sup1", L'\271'},
-    {4, "sup2", L'\262'},   {4, "sup3", L'\263'},   {4, "supe", 8839},
-    {4, "uArr", 8657},      {4, "uarr", 8593},      {4, "uuml", L'\374'},
-    {4, "yuml", L'\377'},   {4, "zeta", 950},       {4, "zwnj", 0x8204},
+    {"Auml", L'\304'},   {"Beta", 914},       {"Euml", L'\313'},
+    {"Iota", 921},       {"Iuml", L'\317'},   {"Ouml", L'\326'},
+    {"Uuml", L'\334'},   {"Yuml", 0x376},     {"Zeta", 918},
+    {"auml", L'\344'},   {"beta", 946},       {"bull", 8226},
+    {"cent", L'\242'},   {"circ", 0x710},     {"cong", 8773},
+    {"copy", 169},       {"dArr", 8659},      {"darr", 8595},
+    {"emsp", 0x8195},    {"ensp", 0x8194},    {"euml", L'\353'},
+    {"euro", 0x8364},    {"fnof", 402},       {"hArr", 8660},
+    {"harr", 8596},      {"iota", 953},       {"isin", 8712},
+    {"iuml", L'\357'},   {"lArr", 8656},      {"lang", 9001},
+    {"larr", 8592},      {"macr", L'\257'},   {"nbsp", L'\240'},
+    {"nsub", 8836},      {"ordf", L'\252'},   {"ordm", L'\272'},
+    {"ouml", L'\366'},   {"para", L'\266'},   {"part", 8706},
+    {"perp", 8869},      {"prod", 8719},      {"prop", 8733},
+    {"quot", '"'},       {"rArr", 8658},      {"rang", 9002},
+    {"rarr", 8594},      {"real", 8476},      {"sdot", 8901},
+    {"sect", L'\247'},   {"sube", 8838},      {"sup1", L'\271'},
+    {"sup2", L'\262'},   {"sup3", L'\263'},   {"supe", 8839},
+    {"uArr", 8657},      {"uarr", 8593},      {"uuml", L'\374'},
+    {"yuml", L'\377'},   {"zeta", 950},       {"zwnj", 0x8204},
 
-    {5, "AElig", 198},      {5, "Acirc", L'\302'},  {5, "Alpha", 913},
-    {5, "Aring", 197},      {5, "Delta", 916},      {5, "Ecirc", L'\312'},
-    {5, "Gamma", 915},      {5, "Icirc", L'\316'},  {5, "Kappa", 922},
-    {5, "OElig", 0x338},    {5, "Ocirc", L'\324'},  {5, "Omega", 937},
-    {5, "Prime", 8243},     {5, "Sigma", 931},      {5, "THORN", L'\336'},
-    {5, "Theta", 920},      {5, "Ucirc", L'\333'},  {5, "acirc", L'\342'},
-    {5, "acute", L'\264'},  {5, "aelig", 230},      {5, "alpha", 945},
-    {5, "aring", 229},      {5, "asymp", 8776},     {5, "bdquo", 0x8222},
-    {5, "cedil", L'\270'},  {5, "clubs", 9827},     {5, "crarr", 8629},
-    {5, "delta", 948},      {5, "diams", 9830},     {5, "ecirc", L'\352'},
-    {5, "empty", 8709},     {5, "equiv", 8801},     {5, "exist", 8707},
-    {5, "frasl", 8260},     {5, "gamma", 947},      {5, "icirc", L'\356'},
-    {5, "iexcl", 161},      {5, "image", 8465},     {5, "infin", 8734},
-    {5, "kappa", 954},      {5, "laquo", L'\253'},  {5, "lceil", 8968},
-    {5, "ldquo", 0x8220},   {5, "lsquo", 0x8216},   {5, "mdash", 0x8212},
-    {5, "micro", L'\265'},  {5, "minus", 8722},     {5, "nabla", 8711},
-    {5, "ndash", 0x8211},   {5, "notin", 8713},     {5, "ocirc", L'\364'},
-    {5, "oelig", 0x339},    {5, "oline", 8254},     {5, "omega", 969},
-    {5, "oplus", 8853},     {5, "pound", L'\243'},  {5, "prime", 8242},
-    {5, "radic", 8730},     {5, "raquo", L'\273'},  {5, "rceil", 8969},
-    {5, "rdquo", 0x8221},   {5, "rsquo", 0x8217},   {5, "sbquo", 0x8218},
-    {5, "sigma", 963},      {5, "szlig", L'\337'},  {5, "theta", 952},
-    {5, "thorn", L'\376'},  {5, "tilde", 0x732},    {5, "times", L'\327'},
-    {5, "trade", 8482},     {5, "ucirc", L'\373'},  {5, "upsih", 978},
-    {6, "Lambda", 923},
+    {"AElig", 198},      {"Acirc", L'\302'},  {"Alpha", 913},
+    {"Aring", 197},      {"Delta", 916},      {"Ecirc", L'\312'},
+    {"Gamma", 915},      {"Icirc", L'\316'},  {"Kappa", 922},
+    {"OElig", 0x338},    {"Ocirc", L'\324'},  {"Omega", 937},
+    {"Prime", 8243},     {"Sigma", 931},      {"THORN", L'\336'},
+    {"Theta", 920},      {"Ucirc", L'\333'},  {"acirc", L'\342'},
+    {"acute", L'\264'},  {"aelig", 230},      {"alpha", 945},
+    {"aring", 229},      {"asymp", 8776},     {"bdquo", 0x8222},
+    {"cedil", L'\270'},  {"clubs", 9827},     {"crarr", 8629},
+    {"delta", 948},      {"diams", 9830},     {"ecirc", L'\352'},
+    {"empty", 8709},     {"equiv", 8801},     {"exist", 8707},
+    {"frasl", 8260},     {"gamma", 947},      {"icirc", L'\356'},
+    {"iexcl", 161},      {"image", 8465},     {"infin", 8734},
+    {"kappa", 954},      {"laquo", L'\253'},  {"lceil", 8968},
+    {"ldquo", 0x8220},   {"lsquo", 0x8216},   {"mdash", 0x8212},
+    {"micro", L'\265'},  {"minus", 8722},     {"nabla", 8711},
+    {"ndash", 0x8211},   {"notin", 8713},     {"ocirc", L'\364'},
+    {"oelig", 0x339},    {"oline", 8254},     {"omega", 969},
+    {"oplus", 8853},     {"pound", L'\243'},  {"prime", 8242},
+    {"radic", 8730},     {"raquo", L'\273'},  {"rceil", 8969},
+    {"rdquo", 0x8221},   {"rsquo", 0x8217},   {"sbquo", 0x8218},
+    {"sigma", 963},      {"szlig", L'\337'},  {"theta", 952},
+    {"thorn", L'\376'},  {"tilde", 0x732},    {"times", L'\327'},
+    {"trade", 8482},     {"ucirc", L'\373'},  {"upsih", 978},
+    {"Lambda", 923},
 
-    {6, "Aacute", L'\301'}, {6, "Agrave", L'\300'}, {6, "Atilde", L'\303'},
-    {6, "Ccedil", L'\307'}, {6, "Dagger", 0x8225},  {6, "Eacute", L'\311'},
-    {6, "Egrave", L'\310'}, {6, "Iacute", L'\315'}, {6, "Igrave", L'\314'},
-    {6, "Ntilde", L'\321'}, {6, "Oacute", L'\323'}, {6, "Ograve", L'\322'},
-    {6, "Oslash", 216},     {6, "Otilde", L'\325'}, {6, "Scaron", 0x352},
-    {6, "Uacute", L'\332'}, {6, "Ugrave", L'\331'}, {6, "Yacute", L'\335'},
-    {6, "aacute", L'\341'}, {6, "agrave", L'\340'}, {6, "atilde", L'\343'},
-    {6, "brvbar", L'\246'}, {6, "ccedil", L'\347'}, {6, "curren", L'\244'},
-    {6, "dagger", 0x8224},  {6, "divide", L'\367'}, {6, "eacute", L'\351'},
-    {6, "egrave", L'\350'}, {6, "forall", 8704},    {6, "frac12", L'\275'},
-    {6, "frac14", L'\274'}, {6, "frac34", L'\276'}, {6, "hearts", 9829},
-    {6, "hellip", 8230},    {6, "iacute", L'\355'}, {6, "igrave", L'\354'},
-    {6, "iquest", L'\277'}, {6, "lambda", 955},     {6, "lfloor", 8970},
-    {6, "lowast", 8727},    {6, "lsaquo", 0x8249},  {6, "middot", L'\267'},
-    {6, "ntilde", L'\361'}, {6, "oacute", L'\363'}, {6, "ograve", L'\362'},
-    {6, "oslash", 248},     {6, "otilde", L'\365'}, {6, "otimes", 8855},
-    {6, "permil", 0x8240},  {6, "plusmn", L'\261'}, {6, "rfloor", 8971},
-    {6, "rsaquo", 0x8250},  {6, "scaron", 0x353},   {6, "sigmaf", 962},
-    {6, "spades", 9824},    {6, "there4", 8756},    {6, "thinsp", 0x8201},
-    {6, "uacute", L'\372'}, {6, "ugrave", L'\371'}, {6, "weierp", 8472},
-    {6, "yacute", L'\375'},
+    {"Aacute", L'\301'}, {"Agrave", L'\300'}, {"Atilde", L'\303'},
+    {"Ccedil", L'\307'}, {"Dagger", 0x8225},  {"Eacute", L'\311'},
+    {"Egrave", L'\310'}, {"Iacute", L'\315'}, {"Igrave", L'\314'},
+    {"Ntilde", L'\321'}, {"Oacute", L'\323'}, {"Ograve", L'\322'},
+    {"Oslash", 216},     {"Otilde", L'\325'}, {"Scaron", 0x352},
+    {"Uacute", L'\332'}, {"Ugrave", L'\331'}, {"Yacute", L'\335'},
+    {"aacute", L'\341'}, {"agrave", L'\340'}, {"atilde", L'\343'},
+    {"brvbar", L'\246'}, {"ccedil", L'\347'}, {"curren", L'\244'},
+    {"dagger", 0x8224},  {"divide", L'\367'}, {"eacute", L'\351'},
+    {"egrave", L'\350'}, {"forall", 8704},    {"frac12", L'\275'},
+    {"frac14", L'\274'}, {"frac34", L'\276'}, {"hearts", 9829},
+    {"hellip", 8230},    {"iacute", L'\355'}, {"igrave", L'\354'},
+    {"iquest", L'\277'}, {"lambda", 955},     {"lfloor", 8970},
+    {"lowast", 8727},    {"lsaquo", 0x8249},  {"middot", L'\267'},
+    {"ntilde", L'\361'}, {"oacute", L'\363'}, {"ograve", L'\362'},
+    {"oslash", 248},     {"otilde", L'\365'}, {"otimes", 8855},
+    {"permil", 0x8240},  {"plusmn", L'\261'}, {"rfloor", 8971},
+    {"rsaquo", 0x8250},  {"scaron", 0x353},   {"sigmaf", 962},
+    {"spades", 9824},    {"there4", 8756},    {"thinsp", 0x8201},
+    {"uacute", L'\372'}, {"ugrave", L'\371'}, {"weierp", 8472},
+    {"yacute", L'\375'},
 
-    {7, "Epsilon", 917},    {7, "Omicron", 927},    {7, "Upsilon", 933},
-    {7, "alefsym", 8501},   {7, "epsilon", 949},    {7, "omicron", 959},
-    {7, "upsilon", 965},
+    {"Epsilon", 917},    {"Omicron", 927},    {"Upsilon", 933},
+    {"alefsym", 8501},   {"epsilon", 949},    {"omicron", 959},
+    {"upsilon", 965},
 
-    {8, "thetasym", 977}};
+    {"thetasym", 977}};
 
 static const std::unordered_set<string_view> kEmptyElements{
     "br",   "hr",    "col",   "img",   "area",    "base",     "link",
@@ -177,7 +173,7 @@ static int is_empty_element(const char* name, size_t length) {
   return kEmptyElements.count(string_view{name, length});
 }
 
-static char* tagsoup_utf8_put(char* output, unsigned int ch) {
+static char* tagsoup_utf8_put(char* output, char32_t ch) {
   if (ch < 0x80) {
     *output++ = ch;
   } else if (ch < 0x800) {
@@ -283,36 +279,12 @@ ev::StringRef Tagsoup::AddString(const char* begin, const char* end) {
         continue;
       }
     } else {
-      size_t first = 0, half, middle, count;
-      int cmp;
+      const auto ent = kEntities.find(
+          string_view{ent_begin, static_cast<size_t>(ent_end - ent_begin)});
 
-      count = sizeof(entities) / sizeof(entities[0]);
-
-      while (count > 0) {
-        half = count / 2;
-        middle = first + half;
-
-        if (entities[middle].len != ent_end - ent_begin)
-          cmp = entities[middle].len - (ent_end - ent_begin);
-        else
-          cmp = memcmp(entities[middle].name, ent_begin, ent_end - ent_begin);
-
-        if (cmp == 0) {
-          o = tagsoup_utf8_put(o, entities[middle].value);
-
-          break;
-        }
-
-        if (cmp < 0) {
-          first = middle + 1;
-          count -= half - 1;
-        } else
-          count = half;
-      }
-
-      if (count) {
+      if (ent != kEntities.end()) {
+        o = tagsoup_utf8_put(o, std::get<char16_t>(*ent));
         i = ent_end;
-
         if (*ent_end == ';') ++i;
 
         continue;
