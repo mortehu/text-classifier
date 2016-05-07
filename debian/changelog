@@ -1,3 +1,10 @@
+text-classifier (1.0.3-1) unstable; urgency=medium
+
+  * Drop -march=native compiler flag.
+  * Fix another buffer overrun bug.
+
+ -- Morten Hustveit <morten.hustveit@gmail.com>  Sat, 07 May 2016 17:46:42 -0400
+
 text-classifier (1.0.2-1) unstable; urgency=medium
 
   * Fix buffer overrun bug discovered with -fstack-protector-strong.

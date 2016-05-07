@@ -1,4 +1,4 @@
-AC_INIT([text-classifier],[1.0.2])
+AC_INIT([text-classifier],[1.0.3])
 AM_INIT_AUTOMAKE([foreign nostdinc subdir-objects])
 
 AC_CONFIG_MACRO_DIR([m4])
