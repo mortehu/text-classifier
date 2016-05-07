@@ -649,8 +649,8 @@ EXTRA_DIST = debian/changelog debian/compat debian/control \
 	tools/text-classifier/reuters/reut2-020.sgm \
 	tools/text-classifier/reuters/reut2-021.sgm
 AM_CPPFLAGS = -I$(srcdir) -I. $(CAPNP_CFLAGS)
-AM_CFLAGS = -g -Wall -march=native
-AM_CXXFLAGS = -g -Wall -march=native
+AM_CFLAGS = -g -Wall
+AM_CXXFLAGS = -g -Wall
 AM_LDFLAGS = -lpthread
 ACLOCAL_AMFLAGS = -I m4
 base_libbase_la_SOURCES = \
