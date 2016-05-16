@@ -1,5 +1,7 @@
 #include "tools/text-classifier/html-tokenizer.h"
 
+#include <thread>
+
 #include "base/string.h"
 #include "base/thread-pool.h"
 #include "index/web/tagsoup.h"
@@ -7,7 +9,11 @@
 
 namespace {
 
-ev::concurrency::RegionPool region_pool(256, 2048);
+ev::concurrency::RegionPool& GetRegionPool() {
+  static ev::concurrency::RegionPool region_pool(
+      std::thread::hardware_concurrency(), (1 << 20) / EV_PAGE_SIZE);
+  return region_pool;
+}
 
 static const char* kStopWords[] = {
     "a",          "about",     "above",     "after",   "again",    "against",
@@ -177,7 +183,7 @@ void HTMLTokenizer::Tokenize(const ev::TagsoupNode* node,
 void HTMLTokenizer::Tokenize(const char* begin, const char* end,
                              std::vector<uint64_t>& result) {
   ev::StringRef data(begin, end);
-  ev::Tagsoup tagsoup(data, region_pool.GetRegion());
+  ev::Tagsoup tagsoup(data, GetRegionPool().GetRegion());
 
   Tokenize(tagsoup.Root(), result);
 
