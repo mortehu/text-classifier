@@ -36,16 +36,6 @@ std::pair<kj::AutoCloseFd, std::string> TemporaryFile(const char* base_name);
 std::pair<kj::AutoCloseFd, std::string> TemporaryFile(int dir_fd,
                                                       const char* base_name);
 
-// Creates an unnamed temporary file in the given directory.
-kj::AutoCloseFd AnonTemporaryFile(const char* path = nullptr,
-                                  int mode = S_IRUSR | S_IWUSR);
-
-// Creates a name for a temporary file created with AnonTemporaryFile().  If
-// the target path already exists, a link with a random name will be created
-// first, in order to replace the target atomically.
-void LinkAnonTemporaryFile(int fd, const char* path);
-void LinkAnonTemporaryFile(int dir_fd, int fd, const char* path);
-
 // Creates a temporary directory with the provided prefix.
 std::string TemporaryDirectory(const char* base_name);
 

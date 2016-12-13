@@ -101,55 +101,6 @@ UniqueFILE OpenFileStream(const char* path, const char* mode) {
   return UniqueFILE(fopen(path, mode), fclose);
 }
 
-kj::AutoCloseFd AnonTemporaryFile(const char* path, int mode) {
-  if (!path) {
-    path = getenv("TMPDIR");
-    if (!path) path = "/tmp";
-  }
-
-  return OpenFile(path, O_TMPFILE | O_RDWR, mode);
-}
-
-void LinkAnonTemporaryFile(int fd, const char* path) {
-  LinkAnonTemporaryFile(AT_FDCWD, fd, path);
-}
-
-void LinkAnonTemporaryFile(int dir_fd, int fd, const char* path) {
-  char temp_path[32];
-  snprintf(temp_path, sizeof(temp_path), "/proc/self/fd/%d", fd);
-  auto ret = linkat(AT_FDCWD, temp_path, dir_fd, path, AT_SYMLINK_FOLLOW);
-  if (ret == 0) return;
-  if (errno != EEXIST) {
-    KJ_FAIL_SYSCALL("linkat", errno, temp_path, path);
-  }
-
-  // Target already exists, so we need an intermediate filename to atomically
-  // replace with rename().
-  std::string intermediate_path = path;
-  intermediate_path += ".XXXXXX";
-
-  static const size_t kMaxAttempts = 62 * 62 * 62;
-
-  for (size_t i = 0; i < kMaxAttempts; ++i) {
-    MakeRandomString(&intermediate_path[intermediate_path.size() - 6], 6);
-
-    ret = linkat(AT_FDCWD, temp_path, dir_fd, intermediate_path.c_str(),
-                 AT_SYMLINK_FOLLOW);
-
-    if (ret == 0) {
-      KJ_SYSCALL(renameat(dir_fd, intermediate_path.c_str(), dir_fd, path),
-                 intermediate_path, path);
-      return;
-    }
-
-    if (errno != EEXIST) {
-      KJ_FAIL_SYSCALL("linkat", errno, intermediate_path, path);
-    }
-  }
-
-  KJ_FAIL_REQUIRE("all temporary file creation attempts failed", kMaxAttempts);
-}
-
 std::pair<kj::AutoCloseFd, std::string> TemporaryFile(const char* base_name) {
   std::vector<char> path(base_name, base_name + strlen(base_name));
   path.push_back('.');
