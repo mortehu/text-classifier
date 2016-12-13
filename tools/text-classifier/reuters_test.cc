@@ -129,9 +129,9 @@ std::vector<bool> ReutersTest::in_text_;
 std::vector<ReutersTest::Document> ReutersTest::documents_;
 
 TEST_F(ReutersTest, LearnCategories) {
-  const auto working_dir = ev::TemporaryDirectory();
-
-  ev::DirectoryTreeRemover working_dir_remover(working_dir);
+  char working_dir[64];
+  strcpy(working_dir, "/tmp/reuters.XXXXXX");
+  if (!mkdtemp(working_dir)) KJ_FAIL_SYSCALL("mkdtemp", errno);
 
   // Load data.
 
@@ -173,6 +173,7 @@ TEST_F(ReutersTest, LearnCategories) {
                                "--no-debug --weight=bns --threshold=3 --C=4 ",
                                topic_data_path, " ", topic_model_path)
                            .c_str()));
+      KJ_SYSCALL(unlink(topic_data_path.c_str()));
     });
   }
 
@@ -204,6 +205,8 @@ TEST_F(ReutersTest, LearnCategories) {
 
     // Wait for classification to finish.
     classify.reset();
+
+    KJ_SYSCALL(unlink(topic_model_path.c_str()));
 
     std::vector<std::pair<float, size_t> > results;
     size_t positive_count = 0;
@@ -244,7 +247,11 @@ TEST_F(ReutersTest, LearnCategories) {
     fprintf(stderr, "%s: %.4f\n", topic, auc_roc);
 
     sum_auc_roc += auc_roc;
+
+    KJ_SYSCALL(unlink(topic_output_path.c_str()));
   }
 
   fprintf(stderr, "Mean: %.4f\n", sum_auc_roc / ARRAY_SIZE(kTopics));
+
+  KJ_SYSCALL(rmdir(working_dir));
 }

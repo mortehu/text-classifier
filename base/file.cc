@@ -57,15 +57,6 @@ class MunmapArrayDisposer : public kj::ArrayDisposer {
 const FreeArrayDisposer FreeArrayDisposer::instance;
 const MunmapArrayDisposer MunmapArrayDisposer::instance;
 
-void MakeRandomString(char* output, size_t length) {
-  static const char kLetters[] =
-      "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-
-  std::uniform_int_distribution<uint8_t> rng_dist(0, strlen(kLetters) - 1);
-
-  while (length--) *output++ = kLetters[rng_dist(ev::StrongRNG())];
-}
-
 }  // namespace
 
 kj::AutoCloseFd OpenFile(const char* path, int flags, int mode) {
@@ -80,165 +71,8 @@ kj::AutoCloseFd OpenFile(int dir_fd, const char* path, int flags, int mode) {
   return kj::AutoCloseFd(fd);
 }
 
-UniqueDIR OpenDirectory(const char* path) {
-  DIR* result = opendir(path);
-  if (!result) KJ_FAIL_SYSCALL("opendir", errno, path);
-  return UniqueDIR(result, &closedir);
-}
-
-UniqueDIR OpenDirectory(int dir_fd, const char* path) {
-  int fd;
-  KJ_SYSCALL(fd = openat(dir_fd, path, O_RDONLY | O_DIRECTORY));
-  DIR* result = fdopendir(fd);
-  if (!result) {
-    close(fd);
-    KJ_FAIL_SYSCALL("fdopendir", errno, dir_fd, path);
-  }
-  return UniqueDIR(result, &closedir);
-}
-
 UniqueFILE OpenFileStream(const char* path, const char* mode) {
   return UniqueFILE(fopen(path, mode), fclose);
-}
-
-std::pair<kj::AutoCloseFd, std::string> TemporaryFile(const char* base_name) {
-  std::vector<char> path(base_name, base_name + strlen(base_name));
-  path.push_back('.');
-  for (size_t i = 0; i < 6; ++i) path.push_back('X');
-  path.push_back(0);
-
-  int fd;
-  KJ_SYSCALL(fd = mkstemp(&path[0]), base_name);
-
-  return std::make_pair(kj::AutoCloseFd(fd), &path[0]);
-}
-
-std::pair<kj::AutoCloseFd, std::string> TemporaryFile(int dir_fd,
-                                                      const char* base_name) {
-  std::string path(base_name);
-  path += ".XXXXXX";
-
-  static const size_t kMaxAttempts = 62 * 62 * 62;
-
-  for (size_t i = 0; i < kMaxAttempts; ++i) {
-    MakeRandomString(&path[path.size() - 6], 6);
-
-    int fd = openat(dir_fd, path.c_str(), O_RDWR | O_CREAT | O_EXCL,
-                    S_IRUSR | S_IWUSR);
-    if (fd >= 0)
-      return std::make_pair<kj::AutoCloseFd, std::string>(kj::AutoCloseFd(fd),
-                                                          std::move(path));
-    if (errno != EEXIST && errno != EPERM)
-      KJ_FAIL_SYSCALL("open", errno, path, dir_fd, base_name);
-  }
-
-  KJ_FAIL_REQUIRE("all temporary file creation attempts failed", kMaxAttempts);
-}
-
-std::string TemporaryDirectory(const char* base_name) {
-  char path[PATH_MAX];
-  strcpy(path, base_name);
-  strcat(path, ".XXXXXX");
-
-  KJ_SYSCALL(mkdtemp(path));
-
-  return path;
-}
-
-std::string TemporaryDirectory() {
-  const char* tmpdir = getenv("TMPDIR");
-  if (!tmpdir) tmpdir = "/tmp";
-  return TemporaryDirectory(cat(tmpdir, "/ev-tmp").c_str());
-}
-
-DirectoryTreeRemover::DirectoryTreeRemover(std::string root)
-    : root_(std::move(root)) {
-  KJ_ASSERT(!root_.empty());
-}
-
-DirectoryTreeRemover::DirectoryTreeRemover(DirectoryTreeRemover&& rhs) {
-  std::swap(root_, rhs.root_);
-}
-
-DirectoryTreeRemover::~DirectoryTreeRemover() {
-  RemoveTree();
-}
-
-DirectoryTreeRemover& DirectoryTreeRemover::operator=(
-    DirectoryTreeRemover&& rhs) {
-  RemoveTree();
-  std::swap(root_, rhs.root_);
-  return *this;
-}
-
-void DirectoryTreeRemover::RemoveTree() {
-  if (!root_.empty()) {
-    RemoveTree(root_);
-    root_.clear();
-  }
-}
-
-void DirectoryTreeRemover::RemoveTree(const std::string& root) {
-  auto dir = OpenDirectory(root.c_str());
-
-  while (auto ent = readdir(dir.get())) {
-    if (!strcmp(ent->d_name, ".") || !strcmp(ent->d_name, "..")) continue;
-
-    std::string path = root;
-    path.push_back('/');
-    path.append(ent->d_name);
-
-    if (ent->d_type == DT_UNKNOWN) {
-      struct stat st;
-      KJ_SYSCALL(stat(path.c_str(), &st));
-      if (S_ISDIR(st.st_mode)) ent->d_type = DT_DIR;
-    }
-
-    if (ent->d_type == DT_DIR) {
-      RemoveTree(path);
-      continue;
-    }
-
-    KJ_SYSCALL(unlink(path.c_str()));
-  }
-
-  KJ_SYSCALL(rmdir(root.c_str()));
-}
-
-void FindFiles(const std::string& root, std::function<void(std::string&&)>&& callback) {
-  auto dir = OpenDirectory(root.c_str());
-
-  while (auto ent = readdir(dir.get())) {
-    if (!strcmp(ent->d_name, ".") || !strcmp(ent->d_name, "..")) continue;
-
-    std::string path = root;
-    path.push_back('/');
-    path.append(ent->d_name);
-
-    if (ent->d_type == DT_UNKNOWN) {
-      struct stat st;
-      KJ_SYSCALL(stat(path.c_str(), &st));
-      if (S_ISDIR(st.st_mode)) ent->d_type = DT_DIR;
-    }
-
-    if (ent->d_type == DT_DIR) {
-      FindFiles(path, [&callback](auto&& path) { callback(std::move(path)); });
-      continue;
-    }
-
-    callback(std::move(path));
-  }
-}
-
-bool ReadAll(int fd, std::function<bool(const void*, size_t)> callback) {
-  std::vector<char> buffer(65536);
-
-  for (;;) {
-    ssize_t ret;
-    KJ_SYSCALL(ret = read(fd, &buffer[0], buffer.size()));
-    if (!ret) return true;
-    if (!callback(&buffer[0], ret)) return false;
-  }
 }
 
 void WriteAll(int fd, const StringRef& buffer) {
@@ -250,42 +84,6 @@ void WriteAll(int fd, const StringRef& buffer) {
     offset += ret;
   }
 }
-
-size_t Read(int fd, void* dest, size_t size_min, size_t size_max) {
-  size_t size = 0;
-  while (size < size_max) {
-    ssize_t ret;
-    KJ_SYSCALL(ret = read(fd, dest, size_max - size));
-    if (ret == 0) {
-      KJ_REQUIRE(size >= size_min, size, size_min, size_max);
-      return size;
-    }
-    size += ret;
-    dest = reinterpret_cast<char*>(dest) + ret;
-  }
-
-  return size;
-}
-
-size_t PRead(int fd, void* dest, size_t size_min, size_t size_max, off_t offset) {
-  size_t result = 0;
-
-  while (size_max > 0) {
-    ssize_t ret;
-    KJ_SYSCALL(ret = pread(fd, dest, size_max, offset));
-    if (ret == 0) break;
-    result += ret;
-    size_max -= ret;
-    offset += ret;
-    dest = reinterpret_cast<char*>(dest) + ret;
-  }
-
-  KJ_REQUIRE(result >= size_min, "unexpectedly reached end of file", offset, result, size_min);
-
-  return result;
-}
-
-void PRead(int fd, void* dest, size_t size, off_t offset) { PRead(fd, dest, size, size, offset); }
 
 kj::Array<char> ReadFD(int fd) {
   static const size_t kMinBufferSize = 1024 * 1024;

@@ -84,7 +84,6 @@ void HexToBinary(InputIterator begin, InputIterator end,
   }
 }
 
-int64_t StringToInt64(const char* string);
 uint64_t StringToUInt64(const char* string);
 
 double StringToDouble(const char* string);

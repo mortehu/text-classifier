@@ -65,13 +65,6 @@ std::string ToLower(std::string str) {
   return str;
 }
 
-int64_t StringToInt64(const char* string) {
-  char* endptr = nullptr;
-  long long value = strtoll(string, &endptr, 0);
-  KJ_REQUIRE(*endptr == 0, "unexpected character in numeric string", string);
-  return value;
-}
-
 uint64_t StringToUInt64(const char* string) {
   char* endptr = nullptr;
   unsigned long long value = strtoull(string, &endptr, 0);
