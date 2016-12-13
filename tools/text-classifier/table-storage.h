@@ -16,6 +16,7 @@ class TableWriter {
  public:
   TableWriter(std::ofstream output) : output_(std::move(output)) {
     KJ_REQUIRE(output_.is_open());
+    output_.exceptions(output_.badbit | output_.failbit);
   }
 
   template <typename... T>
@@ -25,7 +26,6 @@ class TableWriter {
 
   void Flush() {
     output_.flush();
-    KJ_REQUIRE(!output_.fail());
   }
 
  private:
@@ -46,7 +46,7 @@ class TableReader {
  public:
   TableReader(std::ifstream input) : input_(std::move(input)) {
     KJ_REQUIRE(input_.is_open());
-    input_.exceptions(input_.badbit);
+    input_.exceptions(input_.badbit | input_.failbit);
   }
 
   template <typename... T>
@@ -67,8 +67,6 @@ class TableReader {
     if (std::ifstream::traits_type::eof() == input_.peek()) return false;
 
     const auto l __attribute__((unused)) = {(Get(std::get<I>(value)), 0)...};
-
-    KJ_REQUIRE(!input_.fail());
 
     return true;
   }
