@@ -11,7 +11,6 @@
 #include <getopt.h>
 #include <sysexits.h>
 
-#include <columnfile.h>
 #include <kj/debug.h>
 #include <sparsehash/dense_hash_map>
 
@@ -27,6 +26,7 @@
 #include "tools/text-classifier/common.h"
 #include "tools/text-classifier/html-tokenizer.h"
 #include "tools/text-classifier/model.h"
+#include "tools/text-classifier/table-storage.h"
 #include "tools/text-classifier/utf8.h"
 
 using Clock = std::chrono::steady_clock;
@@ -397,15 +397,13 @@ int main(int argc, char** argv) try {
            argv[0]);
     }
 
-    cantera::ColumnFileWriter output(
-        ev::OpenFile(argv[optind++], O_WRONLY | O_APPEND | O_CREAT, 0666));
+    ev::TableWriter output(
+        std::ofstream(argv[optind++], std::ofstream::out | std::ofstream::app));
 
     const auto class_id = ev::StringToFloat(argv[optind++]);
 
     const bool use_stdin = (optind == argc);
     bool done = false;
-
-    std::vector<std::pair<uint32_t, cantera::optional_string_view>> row;
 
     while (!done) {
       kj::Array<const char> buffer;
@@ -437,24 +435,20 @@ int main(int argc, char** argv) try {
       hdr.class_id = class_id;
       hdr.hash_count = doc_hashes.size();
 
-      row.clear();
-      row.emplace_back(0,
-                       cantera::string_view{reinterpret_cast<const char*>(&hdr),
-                                            sizeof(Header)});
-      row.emplace_back(1, cantera::string_view{
-                              reinterpret_cast<const char*>(doc_hashes.data()),
-                              sizeof(doc_hashes[0]) * doc_hashes.size()});
+      std::tuple<ev::string_view, ev::string_view> row;
+      std::get<0>(row) =
+          ev::string_view{reinterpret_cast<const char*>(&hdr), sizeof(Header)};
+      std::get<1>(row) =
+          ev::string_view{reinterpret_cast<const char*>(doc_hashes.data()),
+                          sizeof(doc_hashes[0]) * doc_hashes.size()};
       output.PutRow(row);
     }
   } else if (command == "batch-learn") {
-    static const auto kFlushInterval = 128_z;
-    size_t buffer_fill = 0;
-
     if (optind + 1 != argc)
       errx(EX_USAGE, "Usage: %s [OPTION]... [--] batch-learn DB-PATH", argv[0]);
 
-    cantera::ColumnFileWriter output(
-        ev::OpenFile(argv[optind++], O_WRONLY | O_APPEND | O_CREAT, 0666));
+    ev::TableWriter output(
+        std::ofstream(argv[optind++], std::ofstream::out | std::ofstream::app));
 
     ev::ThreadPool thread_pool;
 
@@ -476,10 +470,7 @@ int main(int argc, char** argv) try {
       KJ_REQUIRE(ret == length, "fread failed");
 
       previous_future = thread_pool.Launch([
-        buffer = std::move(buffer),
-        class_id,
-        &output,
-        &buffer_fill,
+        buffer = std::move(buffer), class_id, &output,
         previous_future = std::move(previous_future)
       ]() mutable {
         std::vector<uint64_t> doc_hashes;
@@ -505,21 +496,15 @@ int main(int argc, char** argv) try {
           hdr.class_id = class_id;
           hdr.hash_count = doc_hashes.size();
 
-          std::vector<std::pair<uint32_t, cantera::optional_string_view>> row;
+          std::tuple<ev::string_view, ev::string_view> row;
 
-          row.emplace_back(
-              0, cantera::string_view{reinterpret_cast<const char*>(&hdr),
-                                      sizeof(Header)});
-          row.emplace_back(1,
-                           cantera::string_view{
-                               reinterpret_cast<const char*>(doc_hashes.data()),
-                               sizeof(doc_hashes[0]) * doc_hashes.size()});
+          std::get<0>(row) = ev::string_view{
+              reinterpret_cast<const char*>(&hdr), sizeof(Header)};
+
+          std::get<1>(row) =
+              ev::string_view{reinterpret_cast<const char*>(doc_hashes.data()),
+                              sizeof(doc_hashes[0]) * doc_hashes.size()};
           output.PutRow(row);
-
-          if (++buffer_fill == kFlushInterval) {
-            output.Flush();
-            buffer_fill = 0;
-          }
         }
 
         return 0;
@@ -593,9 +578,7 @@ int main(int argc, char** argv) try {
       KJ_REQUIRE(ret == length, "fread failed");
 
       thread_pool.Launch([
-        buffer = std::move(buffer),
-        key = std::string(key),
-        &output_lock,
+        buffer = std::move(buffer), key = std::string(key), &output_lock,
         model = model.get()
       ]() mutable {
         std::vector<uint64_t> doc_hashes;
@@ -617,8 +600,7 @@ int main(int argc, char** argv) try {
            argv[0]);
     }
 
-    model->Train(
-        cantera::ColumnFileReader(ev::OpenFile(argv[optind++], O_RDONLY)));
+    model->Train(ev::TableReader(std::ifstream(argv[optind++])));
 
     model->Save(
         ev::OpenFile(argv[optind++], O_WRONLY | O_CREAT | O_TRUNC, 0666));

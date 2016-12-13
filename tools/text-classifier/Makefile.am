@@ -17,8 +17,7 @@ tools_text_classifier_text_classifier_SOURCES = \
   tools/text-classifier/utf8.h
 tools_text_classifier_text_classifier_LDADD = \
   index/libtagsoup.la \
-  base/libbase.la \
-  $(LIBCOLUMNFILE_LIBS)
+  base/libbase.la
 
 tools_text_classifier_reuters_test_SOURCES = \
   tools/text-classifier/reuters_test.cc

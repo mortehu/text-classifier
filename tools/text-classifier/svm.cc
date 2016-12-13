@@ -1,6 +1,5 @@
+#include <iostream>
 #include "tools/text-classifier/svm.h"
-
-#include <columnfile.h>
 
 #include "base/cat.h"
 #include "base/error.h"
@@ -12,6 +11,7 @@
 #include "base/stringref.h"
 #include "base/thread-pool.h"
 #include "tools/text-classifier/common.h"
+#include "tools/text-classifier/table-storage.h"
 
 namespace {
 
@@ -51,7 +51,7 @@ TextClassifierSVMModel::TextClassifierSVMModel(TextClassifierParams params)
   classify_feature_weights_.set_empty_key(0);
 }
 
-void TextClassifierSVMModel::Train(cantera::ColumnFileReader reader) {
+void TextClassifierSVMModel::Train(ev::TableReader reader) {
   std::vector<uint64_t> all_hashes;
 
   // If the input is larger than main memory, it won't all fit in
@@ -65,16 +65,12 @@ void TextClassifierSVMModel::Train(cantera::ColumnFileReader reader) {
 
   size_t document_count = 0;
 
-  while (!reader.End()) {
-    auto row = reader.GetRow();
-    KJ_REQUIRE(row.size() == 2);
-    KJ_REQUIRE(row[0].first == 0, row[0].first);
-    KJ_REQUIRE(row[1].first == 1, row[1].first);
-    KJ_REQUIRE(static_cast<bool>(row[0].second));
-    KJ_REQUIRE(static_cast<bool>(row[1].second));
-    const auto& header_data = row[0].second.value();
+  std::tuple<std::string, std::string> row;
+
+  while (reader.GetRow(row)) {
+    const auto& header_data = std::get<0>(row);
     KJ_REQUIRE(header_data.size() == sizeof(Header), header_data.size());
-    const auto& payload_data = row[1].second.value();
+    const auto& payload_data = std::get<1>(row);
     KJ_REQUIRE((payload_data.size() % sizeof(uint64_t)) == 0,
                payload_data.size());
 
@@ -176,11 +172,9 @@ void TextClassifierSVMModel::Train(cantera::ColumnFileReader reader) {
 
   reader.SeekToStart();
 
-  while (!reader.End()) {
-    auto row = reader.GetRow();
-
-    const auto& header_data = row[0].second.value();
-    const auto& payload_data = row[1].second.value();
+  while (reader.GetRow(row)) {
+    const auto& header_data = std::get<0>(row);
+    const auto& payload_data = std::get<1>(row);
     const auto& header = *reinterpret_cast<const Header*>(header_data.data());
 
     Document doc;

@@ -37,7 +37,7 @@ class TextClassifierSVMModel : public TextClassifierModel {
 
   TextClassifierSVMModel(TextClassifierParams params);
 
-  void Train(cantera::ColumnFileReader input) final;
+  void Train(ev::TableReader input) final;
 
   void Save(kj::AutoCloseFd output) const final;
 

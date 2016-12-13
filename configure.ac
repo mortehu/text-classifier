@@ -3,8 +3,6 @@ AM_INIT_AUTOMAKE([foreign nostdinc subdir-objects])
 
 AC_CONFIG_MACRO_DIR([m4])
 
-AM_MAINTAINER_MODE([disable])
-
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 
 AC_CANONICAL_HOST
@@ -12,7 +10,6 @@ AC_CANONICAL_HOST
 AC_GNU_SOURCE
 
 PKG_CHECK_MODULES([CAPNP], [capnp >= 0.5])
-PKG_CHECK_MODULES([LIBCOLUMNFILE], [libcolumnfile])
 
 AM_PROG_AR
 AM_PROG_CC_C_O
@@ -23,9 +20,6 @@ AC_PROG_MAKE_SET
 LT_INIT
 
 AC_LANG_PUSH([C++])
-AC_CHECK_HEADER(
-  [snappy.h], [AC_CHECK_LIB([snappy], [snappy_compress], [], [])], [])
-
 AX_OPENMP()
 AX_CXX_COMPILE_STDCXX_14([ext])
 AC_LANG_POP([C++])
