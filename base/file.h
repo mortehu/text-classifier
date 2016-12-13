@@ -17,7 +17,7 @@
 
 namespace ev {
 
-typedef std::unique_ptr<DIR, decltype(&closedir)> UniqueDIR;
+typedef std::unique_ptr<DIR, int(*)(DIR*)> UniqueDIR;
 typedef std::unique_ptr<FILE, decltype(&fclose)> UniqueFILE;
 
 kj::AutoCloseFd OpenFile(const char* path, int flags, int mode = 0666);
