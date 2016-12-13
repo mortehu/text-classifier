@@ -18,7 +18,14 @@
 .dirstamp
 .libs
 /Makefile
+/Makefile.in
+/aclocal.m4
+/config.guess
 /config.h
+/config.h.in
+/config.sub
+/configure
 /libtool
+/ltmain.sh
 /tmp
 stamp-h1
