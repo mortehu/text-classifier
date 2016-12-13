@@ -7,6 +7,7 @@
 
 #include <cctype>
 #include <cinttypes>
+#include <cmath>
 #include <map>
 
 #include <kj/debug.h>
