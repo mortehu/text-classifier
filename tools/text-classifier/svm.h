@@ -37,15 +37,15 @@ class TextClassifierSVMModel : public TextClassifierModel {
 
   TextClassifierSVMModel(TextClassifierParams params);
 
-  void Train(cantera::ColumnFileReader input) override;
+  void Train(cantera::ColumnFileReader input) final;
 
-  void Save(kj::AutoCloseFd output) const override;
+  void Save(kj::AutoCloseFd output) const final;
 
-  void Load(kj::AutoCloseFd input) override;
+  void Load(kj::AutoCloseFd input) final;
 
-  void Print() const override;
+  void Print() const final;
 
-  double Classify(const std::vector<uint64_t>& features) const override;
+  double Classify(const std::vector<uint64_t>& features) const final;
 
  private:
   typedef std::vector<std::tuple<float, HashCountType>> HashWeights;
