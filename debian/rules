@@ -1,9 +1,6 @@
 #!/usr/bin/make -f
 
-# output every command that modifies files on the build system.
 export DH_VERBOSE = 1
-
-export DEB_BUILD_MAINT_OPTIONS = hardening=+all
 export DEB_CXXFLAGS_MAINT_APPEND = -O3
 
 %:

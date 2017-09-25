@@ -23,7 +23,7 @@ EXTRA_DIST = \
 
 AM_CPPFLAGS = -I$(srcdir) -I. $(CAPNP_CFLAGS)
 AM_CFLAGS = -g -Wall
-AM_CXXFLAGS = -g -Wall
+AM_CXXFLAGS = -g -Wall -std=c++14
 AM_LDFLAGS = -lpthread
 
 ACLOCAL_AMFLAGS = -I m4
