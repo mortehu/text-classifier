@@ -44,6 +44,7 @@ enum Option : char {
   kOptionC = 'C',
   kOptionClassThreshold = 'c',
   kOptionCostFunction = 'f',
+  kOptionDebug = 'd',
   kOptionEpsilon = 'e',
   kOptionIntercept = 'i',
   kOptionMaxIter = 'I',
@@ -82,6 +83,7 @@ struct option kLongOptions[] = {
     {"min-count", required_argument, nullptr, kOptionMinCount},
     {"model-type", required_argument, nullptr, kOptionModelType},
     {"no-debug", no_argument, nullptr, kOptionNoDebug},
+    {"debug", no_argument, nullptr, kOptionDebug},
     {"no-normalize", no_argument, nullptr, kOptionNoNormalize},
     {"no-shuffle", no_argument, nullptr, kOptionNoShuffle},
     {"no-unique", no_argument, &do_unique, 0},
@@ -225,6 +227,10 @@ int main(int argc, char** argv) try {
 
       case kOptionIntercept:
         params.intercept = ev::StringToDouble(optarg);
+        break;
+
+      case kOptionDebug:
+        params.do_debug = true;
         break;
 
       case kOptionNoDebug:

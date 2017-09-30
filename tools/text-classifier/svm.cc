@@ -745,7 +745,7 @@ std::pair<float, bool> TextClassifierSVMModel::TestParameters(
   if (cache_i != optimize_cache_.end())
     return std::make_pair(cache_i->second, false);
 
-  if (params_.do_debug) fprintf(stderr, "C_pos=%.9g C_neg=%.9g ", C_pos, C_neg);
+  if (params_.do_debug) fprintf(stderr, "--C=%.6g --weight-ratio=%.6g ", C_pos, C_pos / C_neg);
 
   ev::ThreadPool thread_pool;
 
